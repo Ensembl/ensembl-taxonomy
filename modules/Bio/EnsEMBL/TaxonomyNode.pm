@@ -16,7 +16,6 @@ limitations under the License.
 
 =cut
 
-
 =pod
 
 =head1 CONTACT
@@ -37,7 +36,14 @@ Bio::EnsEMBL::TaxonomyNode
 
 =head1 SYNOPSIS
 
-TODO
+my $node = $node_adaptor->fetch_by_taxon_id(511145);
+# print some info
+printf "Node %d is %s %s\n",$node->taxon_id(),$node->rank(),$node->names()->{'scientific name'}->[0];
+# Finding ancestors
+my @lineage = @{$node_adaptor->fetch_ancestors($node)};
+for my $node (@lineage) {
+    printf "Node %d is %s %s\n",$node->taxon_id(),$node->rank(),$node->names()->{'scientific name'}->[0];
+}
 
 =head1 DESCRIPTION
 
@@ -48,7 +54,7 @@ Bio::EnsEMBL::DBSQL::TaxonomyAdaptor.
 
 dstaines
 
-=head1 MAINTANER
+=head1 MAINTAINER
 
 $Author$
 
@@ -92,14 +98,14 @@ use base qw( Bio::EnsEMBL::Storable );
 
   Example       : 
 
-				my $node =
-				  Bio::EnsEMBL::TaxonomyNode->new( -TAXON_ID  => 83333,
-														-PARENT_ID => 500585,
-														-RANK      => 'species',
-														-ROOT_ID   => 1,
-														-LEFT_INDEX => 1092,
-														-RIGHT_INDEX => 1093,
-														-ADAPTOR   => $tna );
+		my $node =
+		  Bio::EnsEMBL::TaxonomyNode->new( -TAXON_ID  => 83333,
+						    -PARENT_ID => 500585,
+						    -RANK      => 'species',
+						    -ROOT_ID   => 1,
+						    -LEFT_INDEX => 1092,
+						    -RIGHT_INDEX => 1093,
+						    -ADAPTOR   => $tna );
 
   Return type   : Bio::EnsEMBL::TaxonomyNode
 =cut
@@ -373,18 +379,6 @@ Return: 1 if the supplied node is an ancestor of this node
 
 sub has_ancestor {
   my ($self,$node) = @_;
-#	my $has_ancestor = 0;
-#	if(!defined $self->{ancestors}) {
-#		$self->{ancestors} = $self->adaptor()->fetch_ancestors($self);
-#	}
-#	for my $ancestor (@{$self->{ancestors}}) {
-#		if($ancestor->taxon_id eq $node->taxon_id()) {
-#			$has_ancestor = 1;
-#			last;
-#		}
-#	}
-#  return $has_ancestor;
-#  
   return $self->adaptor()->node_has_ancestor($self,$node);
 }
 
