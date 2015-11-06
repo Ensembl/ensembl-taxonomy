@@ -20,7 +20,8 @@ use Bio::EnsEMBL::TaxonomyNode;
 use Bio::EnsEMBL::DBSQL::TaxonomyDBAdaptor;
 use Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor;
 
-my $conf_file = 'db.conf';
+use FindBin qw($Bin);
+my $conf_file = "$Bin/db.conf";
 
 my $conf = do $conf_file
   || die "Could not load configuration from " . $conf_file;
@@ -45,7 +46,7 @@ my $root = $node_adaptor->fetch_by_taxon_id(2);
 
 # try all nodes for Ensembl bacteria
 my $taxids = [];
-open my $taxids_file, '<', 'taxids.txt';
+open my $taxids_file, '<', "$Bin/taxids.txt";
 while (<$taxids_file>) {
 	chomp;
 	push @$taxids, $_;

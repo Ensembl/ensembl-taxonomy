@@ -20,7 +20,8 @@ use Bio::EnsEMBL::TaxonomyNode;
 use Bio::EnsEMBL::DBSQL::TaxonomyDBAdaptor;
 use Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor;
 
-my $conf_file = 'db.conf';
+use FindBin qw($Bin);
+my $conf_file = "$Bin/db.conf";
 
 my $conf = do $conf_file
   || die "Could not load configuration from " . $conf_file;
