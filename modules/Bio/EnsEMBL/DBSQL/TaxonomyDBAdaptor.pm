@@ -70,7 +70,6 @@ use strict;
 use warnings;
 
 use base qw ( Bio::EnsEMBL::DBSQL::DBAdaptor );
-use Bio::EnsEMBL::Utils::EGPublicMySQLServer;
 use Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor;
 
 =head1 SUBROUTINES/METHODS
@@ -83,23 +82,6 @@ use Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor;
 
 sub get_available_adaptors {
   return {'TaxonomyNode' => 'Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor'};
-}
-
-=head2 new_public	
-
-	Description	: Build a new adaptor from the public database
-	Returns		: Bio::EnsEMBL::DBSQL::TaxonomyDBAdaptor
-=cut
-
-sub new_public {
-  return
-	Bio::EnsEMBL::DBSQL::TaxonomyDBAdaptor->new(
-											 -user   => eg_user(),
-											 -pass   => eg_pass(),
-											 -dbname => 'ncbi_taxonomy',
-											 -host   => eg_host(),
-											 -port   => eg_port()
-	);
 }
 
 sub get_TaxonomyNodeAdaptor {

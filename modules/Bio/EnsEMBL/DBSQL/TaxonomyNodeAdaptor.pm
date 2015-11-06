@@ -68,7 +68,7 @@ my $node_adaptor = Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor->new($tax_dba);
 The TaxonomyNodeAdaptor handles TaxonomyNode objects, which represent nodes in the NCBI taxonomy
 
 There are two main practical uses for the :
-1. Accessing the taxonomy database to find species of interest and to then find those within the ENA databases e.g. to find all 
+1. Accessing the taxonomy database to find species of interest and to then find those within the Ensembl databases e.g. to find all 
 descendants of the node representing Escherichia coli:
 	my $node = $node_adaptor->fetch_by_taxon_id(562);
 	for my $child (@{$node_adaptor->fetch_descendants($node)}) {
@@ -80,8 +80,8 @@ descendants of the node representing Escherichia coli:
 		}
 	}
 
-2. Placing ENA species into a taxonomic hierarchy and manipulating that hierarchy (mainly for use in the web interface)
-	# iterate over all dbas from a registry or ENARegistryHelper
+2. Placing species into a taxonomic hierarchy and manipulating that hierarchy (mainly for use in the web interface)
+	# iterate over all dbas from a registry or LookUp
 	for my $dba (@{$helper->get_all_DBAdaptors()}) {
 		my $node = $node_adaptor->fetch_by_coredbadaptor($dba);
 		# add the node to a hash set of leaf nodes if not already there
@@ -126,17 +126,6 @@ use Bio::EnsEMBL::TaxonomyNode;
 use Bio::EnsEMBL::DBSQL::TaxonomyDBAdaptor;
 
 use base qw( Bio::EnsEMBL::DBSQL::BaseAdaptor );
-
-=head2 new_public	
-
-	Description	: Build a new adaptor from the public database
-	Returns		: Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor
-=cut
-
-sub new_public {
-  return
-	Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor->new(Bio::EnsEMBL::DBSQL::TaxonomyDBAdaptor->new_public());
-}
 
 =head1 SUBROUTINES/METHODS
 
