@@ -7,8 +7,6 @@ perl:
 
 env:
   - COVERALLS=true  DB=mysql
-  - COVERALLS=false DB=mysql
-  - COVERALLS=false DB=sqlite
   
 sudo: false
   
@@ -25,11 +23,12 @@ before_install:
 
 
 install:
-    - cpanm -v --installdeps --notest .
     - cpanm -n Devel::Cover::Report::Coveralls
     - cpanm -n DBD::SQLite
     - cp travisci/MultiTestDB.conf.travisci.mysql  modules/t/MultiTestDB.conf.mysql
     - cp travisci/MultiTestDB.conf.travisci.SQLite modules/t/MultiTestDB.conf.SQLite
+    - cd ensembl && cpanm -v --installdeps .
+    - cd -
 
 script: "./travisci/harness.sh"
 
