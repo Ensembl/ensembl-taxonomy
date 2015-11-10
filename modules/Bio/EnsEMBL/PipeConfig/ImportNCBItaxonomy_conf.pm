@@ -91,41 +91,7 @@ sub pipeline_create_commands {
     return [
         @{$self->SUPER::pipeline_create_commands},  # inheriting database and hive tables' creation
 
-            # additional tables that we use here (taken from ensembl-compara schema):
-
-        $self->db_cmd(q{
-            CREATE TABLE ncbi_taxa_node (
-              taxon_id                        INT(10) UNSIGNED NOT NULL,
-              parent_id                       INT(10) UNSIGNED NOT NULL,
-
-              rank                            CHAR(32) DEFAULT "" NOT NULL,
-              genbank_hidden_flag             TINYINT(1) DEFAULT 0 NOT NULL,
-
-              left_index                      INT(10) DEFAULT 0 NOT NULL,
-              right_index                     INT(10) DEFAULT 0 NOT NULL,
-              root_id                         INT(10) DEFAULT 1 NOT NULL,
-
-              PRIMARY KEY (taxon_id),
-              KEY (parent_id),
-              KEY (rank),
-              KEY (left_index),
-              KEY (right_index)
-            )
-        }),
-
-        $self->db_cmd(q{
-            CREATE TABLE ncbi_taxa_name (
-              taxon_id                    INT(10) UNSIGNED NOT NULL,
-
-              name                        VARCHAR(255),
-              name_class                  VARCHAR(50),
-
-              KEY (taxon_id),
-              KEY (name),
-              KEY (name_class)
-            )
-        }),
-
+        $self->db_cmd().' < '.$self->o('ensembl_cvs_root_dir').'/ensembl-taxonomy/sql/table.sql',
         'mkdir '.$self->o('work_dir'),
     ];
 }
