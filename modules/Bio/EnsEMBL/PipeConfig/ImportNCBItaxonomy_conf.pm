@@ -194,10 +194,7 @@ sub pipeline_analyses {
         },
 
         {   -logic_name    => 'build_left_right_indices',
-            -module        => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-            -parameters    => {
-                'cmd'       => $self->o('ensembl_cvs_root_dir').'/ensembl-compara/scripts/taxonomy/taxonTreeTool.pl -url '.$self->pipeline_url().' -index',
-            },
+            -module        => 'add_left_right_index',
             -rc_name => 'highmem',
             -flow_into => {
                 1 => [ 'add_import_date' ],
