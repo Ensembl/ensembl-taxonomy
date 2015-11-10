@@ -124,7 +124,7 @@ sub new {
   $self->{'left_index'}      = $left_index;
   $self->{'right_index'}     = $right_index;
   $self->{'dba'}             = $dba || [];
-  $self->{'num_descendants'} = $right_index - $left_index - 1;
+  $self->{'num_descendants'} = ($right_index - $left_index - 1) / 2;
   return $self;
 }
 
