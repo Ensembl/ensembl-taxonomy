@@ -231,7 +231,7 @@ sub pipeline_analyses {
         {   -logic_name    => 'web_name_patches',
             -module        => 'Bio::EnsEMBL::Hive::RunnableDB::DbCmd',
             -parameters    => {
-                'input_file'    => $self->o('ensembl_cvs_root_dir').'/ensembl-compara/scripts/taxonomy/web_name_patches.sql',
+                'input_file'    => $self->o('ensembl_cvs_root_dir').'/ensembl-taxonomy/sql/web_name_patches.sql',
             },
         },
 
