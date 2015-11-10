@@ -93,12 +93,12 @@ sub pipeline_create_commands {
 
             # additional tables that we use here (taken from ensembl-compara schema):
 
-        $self->db_cmd(qq{
+        $self->db_cmd(q{
             CREATE TABLE ncbi_taxa_node (
               taxon_id                        INT(10) UNSIGNED NOT NULL,
               parent_id                       INT(10) UNSIGNED NOT NULL,
 
-              rank                            CHAR(32) DEFAULT \"\" NOT NULL,
+              rank                            CHAR(32) DEFAULT "" NOT NULL,
               genbank_hidden_flag             TINYINT(1) DEFAULT 0 NOT NULL,
 
               left_index                      INT(10) DEFAULT 0 NOT NULL,
@@ -113,7 +113,7 @@ sub pipeline_create_commands {
             )
         }),
 
-        $self->db_cmd(qq{
+        $self->db_cmd(q{
             CREATE TABLE ncbi_taxa_name (
               taxon_id                    INT(10) UNSIGNED NOT NULL,
 
