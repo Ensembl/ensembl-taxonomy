@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.1.61, for redhat-linux-gnu (x86_64)
+-- MySQL dump 10.13  Distrib 5.6.26, for Linux (x86_64)
 --
--- Host: mysql-eg-devel-1.ebi.ac.uk    Database: test_ncbi_taxonomy
+-- Host: mysql-eg-staging-2.ebi.ac.uk    Database: wee
 -- ------------------------------------------------------
--- Server version	5.5.36-log
+-- Server version	5.6.24
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -38,4 +38,4 @@ CREATE TABLE `ncbi_taxa_name` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2014-05-19 16:37:08
+-- Dump completed on 2015-11-10 21:53:57

@@ -1,0 +1,15 @@
+# This provides a default set of configurations which is merged with your
+# provided MultiTestDB.conf.
+#
+# You should provide a MultiTestDB.conf which defines the database connections
+
+{
+  'databases' => {
+	'escherichia_coli' => {
+   		'core' => 'Bio::EnsEMBL::DBSQL::DBAdaptor'
+   	},
+    'eg' => {
+      'tax' => 'Bio::EnsEMBL::DBSQL::TaxonomyDBAdaptor',
+    },
+  },
+}
