@@ -157,7 +157,6 @@ sub pipeline_analyses {
             -input_ids     => [
                 { 'work_dir' => $self->o('work_dir') }
             ],
-            -hive_capacity  => 10,  # to allow parallel branches
             -flow_into => {
                 1 => [ 'untar' ],
             },
@@ -168,7 +167,6 @@ sub pipeline_analyses {
             -parameters    => {
                 'cmd'       => 'cd #work_dir# ; tar -xzf #work_dir#/'.$self->o('taxdump_file'),
             },
-            -hive_capacity  => 10,  # to allow parallel branches
             -flow_into => {
                 '1->A' => [ 'load_nodes', 'load_names' ],
                 'A->1' => [ 'build_left_right_indices' ],
@@ -181,7 +179,6 @@ sub pipeline_analyses {
                 'inputfile'       => '#work_dir#/nodes.dmp',
                 'delimiter'       => "\t\Q|\E\t?",
             },
-            -hive_capacity  => 10,  # to allow parallel branches
             -flow_into => {
                 1 => [ 'zero_parent_id' ],
                 2 => { ':////ncbi_taxa_node' => { 'taxon_id' => '#_0#', 'parent_id' => '#_1#', 'rank' => '#_2#', 'genbank_hidden_flag' => '#_10#'} },
@@ -194,7 +191,6 @@ sub pipeline_analyses {
             -parameters    => {
                 'sql'         => "update ncbi_taxa_node set parent_id=0 where parent_id=taxon_id",
             },
-            -hive_capacity  => 10,  # to allow parallel branches
         },
 
         {   -logic_name    => 'build_left_right_indices',
@@ -202,7 +198,6 @@ sub pipeline_analyses {
             -parameters    => {
                 'cmd'       => $self->o('ensembl_cvs_root_dir').'/ensembl-compara/scripts/taxonomy/taxonTreeTool.pl -url '.$self->pipeline_url().' -index',
             },
-            -hive_capacity  => 10,  # to allow parallel branches
             -rc_name => 'highmem',
             -flow_into => {
                 1 => [ 'add_import_date' ],
@@ -217,7 +212,6 @@ sub pipeline_analyses {
                 'inputfile'       => '#work_dir#/names.dmp',
                 'delimiter'       => "\t\Q|\E\t?",
             },
-            -hive_capacity  => 10,  # to allow parallel branches
             -flow_into => {
                 1 => [ 'load_merged_names' ],
                 2 => { ':////ncbi_taxa_name' => { 'taxon_id' => '#_0#', 'name' => '#_1#', 'name_class' => '#_3#'} },
@@ -231,7 +225,6 @@ sub pipeline_analyses {
                 'inputfile'       => '#work_dir#/merged.dmp',
                 'delimiter'       => "\t\Q|\E\t?",
             },
-            -hive_capacity  => 10,  # to allow parallel branches
             -flow_into => {
                 1 => [ 'web_name_patches' ],
                 2 => { ':////ncbi_taxa_name' => { 'name' => '#_0#', 'taxon_id' => '#_1#', 'name_class' => 'merged_taxon_id'} },
@@ -243,7 +236,6 @@ sub pipeline_analyses {
             -parameters    => {
                 'input_file'    => $self->o('ensembl_cvs_root_dir').'/ensembl-compara/scripts/taxonomy/web_name_patches.sql',
             },
-            -hive_capacity  => 10,  # to allow parallel branches
         },
 
         {   -logic_name => 'add_import_date',
@@ -251,7 +243,6 @@ sub pipeline_analyses {
             -parameters => {
                 'sql'   => 'INSERT INTO ncbi_taxa_name (taxon_id, name_class, name) SELECT taxon_id, "import date", CURRENT_TIMESTAMP FROM ncbi_taxa_node WHERE parent_id=0 GROUP BY taxon_id',
             },
-            -hive_capacity  => 10,  # to allow parallel branches
             -flow_into => {
                 1 => [ 'cleanup' ],
             },
@@ -263,7 +254,6 @@ sub pipeline_analyses {
                 'work_dir'  => '/tmp/not_so_important', # make sure $self->param('work_dir') contains something by default, or else.
                 'cmd'       => 'rm -rf #work_dir#',
             },
-            -hive_capacity  => 10,  # to allow parallel branches
         },
 
     ];
