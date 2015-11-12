@@ -26,8 +26,8 @@ my $root_node_name = 'Bacteria';
 
 plan tests => 4;
 
-my $multi_db = Bio::EnsEMBL::Test::MultiTestDB->new('eg');
-my $dba = $multi_db->get_DBAdaptor('tax');
+my $multi_db = Bio::EnsEMBL::Test::MultiTestDB->new('multi');
+my $dba = $multi_db->get_DBAdaptor('taxonomy');
 my $dbc = Bio::EnsEMBL::Hive::DBSQL::DBConnection->new(-dbconn => $dba->dbc);
 
 # We reset the indices

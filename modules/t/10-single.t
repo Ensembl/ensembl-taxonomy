@@ -22,8 +22,8 @@ use Bio::EnsEMBL::DBSQL::TaxonomyDBAdaptor;
 use Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor;
 use Bio::EnsEMBL::Test::MultiTestDB;
 
-my $multi = Bio::EnsEMBL::Test::MultiTestDB->new('eg');
-my $tax   = $multi->get_DBAdaptor('tax');
+my $multi = Bio::EnsEMBL::Test::MultiTestDB->new('multi');
+my $tax   = $multi->get_DBAdaptor('taxonomy');
 
 use FindBin qw($Bin);
 my $conf_file = "$Bin/db.conf";
