@@ -160,7 +160,7 @@ sub pipeline_analyses {
         },
 
         {   -logic_name    => 'build_left_right_indices',
-            -module        => 'add_left_right_index',
+            -module        => 'Bio::EnsEMBL::Taxonomy::RunnableDB::AddLeftRightIndexes',
             -rc_name => 'highmem',
             -flow_into => {
                 1 => [ 'add_import_date' ],
