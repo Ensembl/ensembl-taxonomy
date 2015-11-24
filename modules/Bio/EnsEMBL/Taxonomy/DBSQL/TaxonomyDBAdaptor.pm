@@ -29,7 +29,7 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::DBSQL::TaxonomyDBAdaptor
+Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyDBAdaptor
 
 =head1 DESCRIPTION
 
@@ -38,7 +38,7 @@ Specialised DBAdaptor for connecting to the ncbi_taxonomy MySQL database
 =head1 SYNOPSIS
 
 #create an adaptor (Registry cannot be used currently)
-my $tax_dba =  Bio::EnsEMBL::DBSQL::TaxonomyDBAdaptor->new(
+my $tax_dba =  Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyDBAdaptor->new(
 									  -user   => $tax_user,
 									  -pass   => $tax_pass,
 									  -dbname => $tax_db,
@@ -64,13 +64,13 @@ $Author$
 $Revision$
 =cut		
 
-package Bio::EnsEMBL::DBSQL::TaxonomyDBAdaptor;
+package Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyDBAdaptor;
 
 use strict;
 use warnings;
 
 use base qw ( Bio::EnsEMBL::DBSQL::DBAdaptor );
-use Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor;
+use Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyNodeAdaptor;
 
 =head1 SUBROUTINES/METHODS
 
@@ -81,12 +81,12 @@ use Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor;
 =cut
 
 sub get_available_adaptors {
-  return {'TaxonomyNode' => 'Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor'};
+  return {'TaxonomyNode' => 'Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyNodeAdaptor'};
 }
 
 sub get_TaxonomyNodeAdaptor {
 	my ($self) = @_;
-	return Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor->new($self); 
+	return Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyNodeAdaptor->new($self); 
 }
 
 1;

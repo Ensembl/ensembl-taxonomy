@@ -16,8 +16,8 @@
 use Test::More;
 
 BEGIN {
-	use_ok( 'Bio::EnsEMBL::TaxonomyNode' );
-	use_ok( 'Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor' );
+	use_ok( 'Bio::EnsEMBL::Taxonomy::TaxonomyNode' );
+	use_ok( 'Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyNodeAdaptor' );
 }
 
 diag( "Testing ensembl-taxonomy, Perl $], $^X" );

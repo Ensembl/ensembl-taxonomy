@@ -17,9 +17,9 @@ use warnings;
 
 use Test::More;
 
-use Bio::EnsEMBL::TaxonomyNode;
-use Bio::EnsEMBL::DBSQL::TaxonomyDBAdaptor;
-use Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor;
+use Bio::EnsEMBL::Taxonomy::TaxonomyNode;
+use Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyDBAdaptor;
+use Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyNodeAdaptor;
 use Bio::EnsEMBL::Test::MultiTestDB;
 
 my $multi = Bio::EnsEMBL::Test::MultiTestDB->new('multi');

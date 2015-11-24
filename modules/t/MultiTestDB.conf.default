@@ -9,7 +9,7 @@
    		'core' => 'Bio::EnsEMBL::DBSQL::DBAdaptor'
    	},
     'multi' => {
-      'taxonomy' => 'Bio::EnsEMBL::DBSQL::TaxonomyDBAdaptor',
+      'taxonomy' => 'Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyDBAdaptor',
     },
   },
 }

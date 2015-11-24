@@ -32,7 +32,7 @@ __END__
 
 =head1 NAME
 
-Bio::EnsEMBL::TaxonomyNode
+Bio::EnsEMBL::Taxonomy::TaxonomyNode
 
 =head1 SYNOPSIS
 
@@ -64,7 +64,7 @@ $Revision$
 
 =cut
 
-package Bio::EnsEMBL::TaxonomyNode;
+package Bio::EnsEMBL::Taxonomy::TaxonomyNode;
 
 use strict;
 use warnings;
@@ -99,7 +99,7 @@ use base qw( Bio::EnsEMBL::Storable );
   Example       : 
 
 		my $node =
-		  Bio::EnsEMBL::TaxonomyNode->new( -TAXON_ID  => 83333,
+		  Bio::EnsEMBL::Taxonomy::TaxonomyNode->new( -TAXON_ID  => 83333,
 						    -PARENT_ID => 500585,
 						    -RANK      => 'species',
 						    -ROOT_ID   => 1,
@@ -107,7 +107,7 @@ use base qw( Bio::EnsEMBL::Storable );
 						    -RIGHT_INDEX => 1093,
 						    -ADAPTOR   => $tna );
 
-  Return type   : Bio::EnsEMBL::TaxonomyNode
+  Return type   : Bio::EnsEMBL::Taxonomy::TaxonomyNode
 =cut
 
 sub new {
@@ -197,8 +197,8 @@ sub num_descendants {
 =head2 dba
 
 Description : Getter/setter for core database adaptor for this node
-Argument    : (optional) Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor
-Return type : Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor
+Argument    : (optional) Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyNodeAdaptor
+Return type : Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyNodeAdaptor
 =cut
 
 sub dba {
@@ -212,8 +212,8 @@ sub dba {
 =head2 root
 
 Description	  : Getter/setter for root node for this node (fetched lazily using adaptor)
-Argument    : (optional) Bio::EnsEMBL::TaxonomyNode
-Return type   : Bio::EnsEMBL::TaxonomyNode
+Argument    : (optional) Bio::EnsEMBL::Taxonomy::TaxonomyNode
+Return type   : Bio::EnsEMBL::Taxonomy::TaxonomyNode
 =cut
 sub root {
   my ($self, $arg) = @_;
@@ -229,8 +229,8 @@ sub root {
 =head2 parent
 
 Description	  : Getter/setter for parent node for this node (fetched lazily using adaptor)
-Argument      : (optional) Bio::EnsEMBL::TaxonomyNode
-Return type   : Bio::EnsEMBL::TaxonomyNode
+Argument      : (optional) Bio::EnsEMBL::Taxonomy::TaxonomyNode
+Return type   : Bio::EnsEMBL::Taxonomy::TaxonomyNode
 =cut
 
 sub parent {
@@ -247,8 +247,8 @@ sub parent {
 =head2 children
 
 Description	  : Getter/setter for arrayref of child nodes for this node (fetched lazily using adaptor)
-Argument      : (optional) Arrayref of Bio::EnsEMBL::TaxonomyNode
-Return type   : Arrayref of Bio::EnsEMBL::TaxonomyNode
+Argument      : (optional) Arrayref of Bio::EnsEMBL::Taxonomy::TaxonomyNode
+Return type   : Arrayref of Bio::EnsEMBL::Taxonomy::TaxonomyNode
 =cut
 
 sub children {
@@ -311,7 +311,7 @@ sub add_all_descendants {
 
 =head2 add_child 
 Description		: Add child node (if not already present)
-Argument        : Arrayref of Bio::EnsEMBL::TaxonomyNode
+Argument        : Arrayref of Bio::EnsEMBL::Taxonomy::TaxonomyNode
 Return type     : None
 =cut
 
@@ -362,7 +362,7 @@ sub count_leaves {
 
 =head2 distance_to_node
 Description 	: Calculate the distance between this and the supplied node in steps via the closest common ancestor
-Argument 		: Bio::EnsEMBL::TaxonomyNode
+Argument 		: Bio::EnsEMBL::Taxonomy::TaxonomyNode
 Return type		: Int
 =cut
 

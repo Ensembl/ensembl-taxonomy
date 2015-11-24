@@ -29,12 +29,12 @@ limitations under the License.
  
 =head1 NAME
 
-Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor
+Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyNodeAdaptor
 
 =head1 SYNOPSIS
 
 #create an adaptor (Registry cannot be used currently)
-my $tax_dba =  Bio::EnsEMBL::DBSQL::TaxonomyDBAdaptor->new(
+my $tax_dba =  Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyDBAdaptor->new(
 									  -user   => $tax_user,
 									  -pass   => $tax_pass,
 									  -dbname => $tax_db,
@@ -54,7 +54,7 @@ for my $node (@lineage) {
 =head1 DESCRIPTION
 
 A database adaptor allowing access to the nodes of the NCBI taxonomy. It is currently managed independently of the registry:
-my $tax_dba =  Bio::EnsEMBL::DBSQL::TaxonomyDBAdaptor->new(
+my $tax_dba =  Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyDBAdaptor->new(
 									  -user   => $tax_user,
 									  -pass   => $tax_pass,
 									  -dbname => $tax_db,
@@ -63,7 +63,7 @@ my $tax_dba =  Bio::EnsEMBL::DBSQL::TaxonomyDBAdaptor->new(
 									  									  
 my $node_adaptor = $tax_dba->get_TaxonomyNodeAdaptor();
 # or alternatively
-my $node_adaptor = Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor->new($tax_dba);
+my $node_adaptor = Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyNodeAdaptor->new($tax_dba);
 
 The TaxonomyNodeAdaptor handles TaxonomyNode objects, which represent nodes in the NCBI taxonomy
 
@@ -114,7 +114,7 @@ $Author$
 $Revision$
 =cut
 
-package Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor;
+package Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyNodeAdaptor;
 
 use strict;
 use warnings;
@@ -122,8 +122,8 @@ use warnings;
 use Bio::EnsEMBL::Utils::Exception qw( throw );
 use Bio::EnsEMBL::Utils::Scalar qw( assert_ref );
 use Bio::EnsEMBL::Utils::SqlHelper;
-use Bio::EnsEMBL::TaxonomyNode;
-use Bio::EnsEMBL::DBSQL::TaxonomyDBAdaptor;
+use Bio::EnsEMBL::Taxonomy::TaxonomyNode;
+use Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyDBAdaptor;
 
 use base qw( Bio::EnsEMBL::DBSQL::BaseAdaptor );
 
@@ -152,7 +152,7 @@ sub mapper {
 	  my $value = shift;
 	  if (!$value) {
 		$value =
-		  Bio::EnsEMBL::TaxonomyNode->new(-TAXON_ID    => $row[0],
+		  Bio::EnsEMBL::Taxonomy::TaxonomyNode->new(-TAXON_ID    => $row[0],
 										  -PARENT_ID   => $row[1],
 										  -RANK        => $row[2],
 										  -ROOT_ID     => $row[3],
@@ -177,7 +177,7 @@ q{select n.taxon_id, n.parent_id, n.rank, n.root_id, n.left_index, n.right_index
 
 Description : Fetch a single node corresponding to the taxonomy ID found in the supplied Ensembl DBAdaptor. Warning: Passing 2 different DBAs with the same taxid will yield two distinct Node objects which will need merging! COnsider using fetch_by_coredbadaptors instead.
 Argument    : Bio::EnsEMBL::DBSQL::DBAdaptor
-Return type : Bio::EnsEMBL::TaxonomyNode
+Return type : Bio::EnsEMBL::Taxonomy::TaxonomyNode
 =cut
 
 sub fetch_by_coredbadaptor {
@@ -199,7 +199,7 @@ sub fetch_by_coredbadaptor {
 
 Description : Fetch an array of nodes corresponding to the taxonomy IDs found in the supplied Ensembl DBAdaptors.
 Argument    : Bio::EnsEMBL::DBSQL::DBAdaptor
-Return type : Arrayref of Bio::EnsEMBL::TaxonomyNode
+Return type : Arrayref of Bio::EnsEMBL::Taxonomy::TaxonomyNode
 =cut
 
 sub fetch_by_coredbadaptors {
@@ -234,7 +234,7 @@ sub fetch_by_coredbadaptors {
 
 Description : Fetch a single node corresponding to the supplied taxon ID.
 Argument    : Int
-Return type : Bio::EnsEMBL::TaxonomyNode
+Return type : Bio::EnsEMBL::Taxonomy::TaxonomyNode
 =cut
 
 sub fetch_by_taxon_id {
@@ -250,7 +250,7 @@ sub fetch_by_taxon_id {
 
 Description : Fetch a single node where the name is as specified
 Argument    : String
-Return type : Bio::EnsEMBL::TaxonomyNode
+Return type : Bio::EnsEMBL::Taxonomy::TaxonomyNode
 =cut
 
 sub fetch_by_taxon_name {
@@ -267,7 +267,7 @@ q{ join ncbi_taxa_name nan using (taxon_id) where nan.name=?},
 
 Description : Fetch an array of nodes corresponding to the supplied taxonomy IDs
 Argument    : Arrayref of Int
-Return type : Arrayref of Bio::EnsEMBL::TaxonomyNode
+Return type : Arrayref of Bio::EnsEMBL::Taxonomy::TaxonomyNode
 =cut
 
 sub fetch_all_by_taxon_ids {
@@ -284,7 +284,7 @@ sub fetch_all_by_taxon_ids {
 
 Description : Fetch an array of nodes which have the supplied rank
 Argument    : String
-Return type : Arrayref of Bio::EnsEMBL::TaxonomyNode
+Return type : Arrayref of Bio::EnsEMBL::Taxonomy::TaxonomyNode
 =cut
 
 sub fetch_all_by_rank {
@@ -301,7 +301,7 @@ sub fetch_all_by_rank {
 
 Description : Fetch an array of nodes which have a name LIKE the supplied String
 Argument    : Name as String (can contain SQL wildcards)
-Return type : Arrayref of Bio::EnsEMBL::TaxonomyNode
+Return type : Arrayref of Bio::EnsEMBL::Taxonomy::TaxonomyNode
 =cut
 
 sub fetch_all_by_name {
@@ -320,7 +320,7 @@ q{ join ncbi_taxa_name nan using (taxon_id) where nan.name like ?},
 Description : Fetch an array of nodes which have a name and name class LIKE the supplied Strings
 Argument    : Name as String (can contain SQL wildcards)
 Argument    : Name class as String (can contain SQL wildcards)
-Return type : Arrayref of Bio::EnsEMBL::TaxonomyNode
+Return type : Arrayref of Bio::EnsEMBL::Taxonomy::TaxonomyNode
 =cut
 
 sub fetch_all_by_name_and_class {
@@ -339,7 +339,7 @@ q{ join ncbi_taxa_name nan using (taxon_id) where nan.name like ? and nan.name_c
 Description : Fetch an array of nodes which have the supplied rank and a name LIKE the supplied String
 Argument    : Name as String (can contain SQL wildcards)
 Argument    : Rank as String
-Return type : Arrayref of Bio::EnsEMBL::TaxonomyNode
+Return type : Arrayref of Bio::EnsEMBL::Taxonomy::TaxonomyNode
 =cut
 
 sub fetch_all_by_name_and_rank {
@@ -356,8 +356,8 @@ q{ join ncbi_taxa_name nan using (taxon_id) where nan.name like ? and n.rank = ?
 =head2 fetch_parent
  
 Description : Fetch a single node corresponding to the parent of the node
-Argument    : Bio::EnsEMBL::TaxonomyNode or ID of desired node
-Return type : Bio::EnsEMBL::TaxonomyNode
+Argument    : Bio::EnsEMBL::Taxonomy::TaxonomyNode or ID of desired node
+Return type : Bio::EnsEMBL::Taxonomy::TaxonomyNode
 =cut
 
 sub fetch_parent {
@@ -374,8 +374,8 @@ sub fetch_parent {
 =head2 fetch_root
 
 Description : Fetch a single node corresponding to the root of the supplied node
-Argument    : Bio::EnsEMBL::TaxonomyNode or ID of desired node
-Return type : Bio::EnsEMBL::TaxonomyNode
+Argument    : Bio::EnsEMBL::Taxonomy::TaxonomyNode or ID of desired node
+Return type : Bio::EnsEMBL::Taxonomy::TaxonomyNode
 =cut
 
 sub fetch_root {
@@ -392,8 +392,8 @@ sub fetch_root {
 =head2 fetch_children
 
 Description : Fetch an array of nodes for which the parent is the supplied node
-Argument    : Bio::EnsEMBL::TaxonomyNode or ID of desired node
-Return type : Arrayref of Bio::EnsEMBL::TaxonomyNode
+Argument    : Bio::EnsEMBL::Taxonomy::TaxonomyNode or ID of desired node
+Return type : Arrayref of Bio::EnsEMBL::Taxonomy::TaxonomyNode
 =cut
 
 sub fetch_children {
@@ -447,7 +447,7 @@ sub fetch_ancestor_by_rank {
 
 sub _get_node {
   my ($self, $node) = @_;
-  if (ref($node) eq 'Bio::EnsEMBL::TaxonomyNode') {
+  if (ref($node) eq 'Bio::EnsEMBL::Taxonomy::TaxonomyNode') {
 	return $node;
   }
   else {
@@ -458,7 +458,7 @@ sub _get_node {
 sub _get_node_id {
   my ($node) = @_;
   my $node_id;
-  if (ref($node) eq 'Bio::EnsEMBL::TaxonomyNode') {
+  if (ref($node) eq 'Bio::EnsEMBL::Taxonomy::TaxonomyNode') {
 	return $node->taxon_id();
   }
   else {
@@ -469,8 +469,8 @@ sub _get_node_id {
 =head2 fetch_descendants
 
 Description : Fetch an array of nodes below the supplied node on the tree
-Argument    : Bio::EnsEMBL::TaxonomyNode or ID of desired node
-Return type : Arrayref of Bio::EnsEMBL::TaxonomyNode
+Argument    : Bio::EnsEMBL::Taxonomy::TaxonomyNode or ID of desired node
+Return type : Arrayref of Bio::EnsEMBL::Taxonomy::TaxonomyNode
 =cut
 sub fetch_descendants {
   my ($self, $node) = @_;
@@ -488,7 +488,7 @@ sub fetch_descendants {
 =head2 fetch_descendant_ids
 
 Description : Fetch an array of taxon IDs below the supplied node on the tree
-Argument    : Bio::EnsEMBL::TaxonomyNode or ID of desired node
+Argument    : Bio::EnsEMBL::Taxonomy::TaxonomyNode or ID of desired node
 Return type : Arrayref of integers
 =cut
 sub fetch_descendant_ids {
@@ -504,8 +504,8 @@ sub fetch_descendant_ids {
 =head2 fetch_leaf_nodes
 
 Description : Fetch an array of nodes which are the leaves below the supplied node on the tree
-Argument    : Bio::EnsEMBL::TaxonomyNode or ID of desired node
-Return type : Arrayref of Bio::EnsEMBL::TaxonomyNode
+Argument    : Bio::EnsEMBL::Taxonomy::TaxonomyNode or ID of desired node
+Return type : Arrayref of Bio::EnsEMBL::Taxonomy::TaxonomyNode
 =cut
 
 sub fetch_leaf_nodes {
@@ -522,8 +522,8 @@ sub fetch_leaf_nodes {
 =head2 fetch_ancestors
 
 Description : Fetch an array of nodes which are above the supplied node on the tree (ordered ascending up the tree)
-Argument    : Bio::EnsEMBL::TaxonomyNode or ID of desired node
-Return type : Arrayref of Bio::EnsEMBL::TaxonomyNode
+Argument    : Bio::EnsEMBL::Taxonomy::TaxonomyNode or ID of desired node
+Return type : Arrayref of Bio::EnsEMBL::Taxonomy::TaxonomyNode
 =cut
 
 sub fetch_ancestors {
@@ -541,8 +541,8 @@ sub fetch_ancestors {
 =head2 node_has_ancestor
 
 Description : Find if one node has another as an ancestor
-Argument    : Bio::EnsEMBL::TaxonomyNode or ID of desired node
-Argument    : Bio::EnsEMBL::TaxonomyNode or ID of ancestor
+Argument    : Bio::EnsEMBL::Taxonomy::TaxonomyNode or ID of desired node
+Argument    : Bio::EnsEMBL::Taxonomy::TaxonomyNode or ID of ancestor
 Return type : 1 if ancestor 
 =cut
 
@@ -559,9 +559,9 @@ sub node_has_ancestor {
 =head2 fetch_descendants_offset
 
 Description : Fetch an array of nodes below the node the specified number of levels on the tree above the specified node
-Argument    : Bio::EnsEMBL::TaxonomyNode or ID of desired node
+Argument    : Bio::EnsEMBL::Taxonomy::TaxonomyNode or ID of desired node
 Argument    : offset (number of rows to move up tree before getting descendants - default is 1)
-Return type : Arrayref of Bio::EnsEMBL::TaxonomyNode
+Return type : Arrayref of Bio::EnsEMBL::Taxonomy::TaxonomyNode
 =cut
 
 sub fetch_descendants_offset {
@@ -578,7 +578,7 @@ sub fetch_descendants_offset {
 =head2 add_descendants
 
 Description : Fetch descendants for the supplied node and assemble into a tree
-Argument    : Bio::EnsEMBL::TaxonomyNode
+Argument    : Bio::EnsEMBL::Taxonomy::TaxonomyNode
 Return type : None
 =cut
 
@@ -592,8 +592,8 @@ sub add_descendants {
 =head2 associate_nodes
 
 Description : Associate the supplied nodes into a tree based on left/right indices and return the root node
-Argument    : Arrayref of Bio::EnsEMBL::TaxonomyNode
-Return type : Bio::EnsEMBL::TaxonomyNode
+Argument    : Arrayref of Bio::EnsEMBL::Taxonomy::TaxonomyNode
+Return type : Bio::EnsEMBL::Taxonomy::TaxonomyNode
 =cut
 
 sub associate_nodes {
@@ -627,7 +627,7 @@ sub associate_nodes {
 =head2 set_num_descendants
 
 Description : Traverse the supplied tree setting number of descendants based on current tree structure
-Argument    : Bio::EnsEMBL::TaxonomyNode
+Argument    : Bio::EnsEMBL::Taxonomy::TaxonomyNode
 Return type : None
 =cut
 
@@ -644,7 +644,7 @@ sub set_num_descendants {
 Description: Find the parent of a node, initially based on left/right index to find direct parent, and then by recursion through parents to work back to the closest common ancestor.
 Argument: Current node
 Argument: Prospective parent
-Return type: Bio::EnsEMBL::TaxonomyNode
+Return type: Bio::EnsEMBL::Taxonomy::TaxonomyNode
 =cut
 
 sub _get_parent_by_index {
@@ -663,8 +663,8 @@ sub _get_parent_by_index {
 
 =head2 build_pruned_tree
 Description : Restrict supplied tree by list of key leaf nodes
-Argument    : Bio::EnsEMBL::TaxonomyNode
-Argument    : Array ref of Bio::EnsEMBL::TaxonomyNode
+Argument    : Bio::EnsEMBL::Taxonomy::TaxonomyNode
+Argument    : Array ref of Bio::EnsEMBL::Taxonomy::TaxonomyNode
 Return type : None
 =cut
 
@@ -681,8 +681,8 @@ sub build_pruned_tree {
 
 =head2 collapse_tree
 Description : Remove all nodes from tree that do not fit the required criteria. By default, these are not branch points, the root node, leaf nodes or nodes with database adaptors.
-Argument    : Bio::EnsEMBL::TaxonomyNode
-Argument    : Array ref of Bio::EnsEMBL::TaxonomyNode
+Argument    : Bio::EnsEMBL::Taxonomy::TaxonomyNode
+Argument    : Array ref of Bio::EnsEMBL::Taxonomy::TaxonomyNode
 Argument    : (Optional) Subroutine reference which is used to define whether to retain a node
 Return type : None
 =cut
@@ -711,8 +711,8 @@ sub collapse_tree {
 
 =head2 distance_between_nodes
 Description : Count the number of steps in the shortest route from one node to another (via the common ancestor)
-Argument    : Bio::EnsEMBL::TaxonomyNode
-Argument    : Bio::EnsEMBL::TaxonomyNode
+Argument    : Bio::EnsEMBL::Taxonomy::TaxonomyNode
+Argument    : Bio::EnsEMBL::Taxonomy::TaxonomyNode
 Return type : Integer
 =cut
 
@@ -739,7 +739,7 @@ sub distance_between_nodes {
 
 =head2 _build_node_array
 Description: Build a sparse array based on left/right indices of a set of nodes to allow speedy lookup
-Argument: Arrayref of Bio::EnsEMBL::TaxonomyNode
+Argument: Arrayref of Bio::EnsEMBL::Taxonomy::TaxonomyNode
 Return type: Arrayref containing arrayref of 1/0 by left/right, min left index, max right index
 =cut
 
@@ -767,9 +767,9 @@ sub _build_node_array {
 
 =head2 _restrict_set
 Description: Restrict the input set to those needed to build a tree including all members of the leaf set
-Argument: Arrayref of Bio::EnsEMBL::TaxonomyNode (leaf set)
-Argument: Arrayref of Bio::EnsEMBL::TaxonomyNode (input set)
-Return: Arrayref of Bio::EnsEMBL::TaxonomyNode
+Argument: Arrayref of Bio::EnsEMBL::Taxonomy::TaxonomyNode (leaf set)
+Argument: Arrayref of Bio::EnsEMBL::Taxonomy::TaxonomyNode (input set)
+Return: Arrayref of Bio::EnsEMBL::Taxonomy::TaxonomyNode
 =cut
 
 sub _restrict_set {

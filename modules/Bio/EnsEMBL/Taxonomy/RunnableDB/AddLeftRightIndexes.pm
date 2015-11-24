@@ -21,7 +21,7 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::RunnableDB::AddLeftRightIndexes
+Bio::EnsEMBL::Taxonomy::RunnableDB::AddLeftRightIndexes
 
 =head1 DESCRIPTION
 
@@ -30,7 +30,7 @@ It modifies the database listed in the 'db_conn' parameter or the current hive d
 
 =cut
 
-package Bio::EnsEMBL::RunnableDB::AddLeftRightIndexes;
+package Bio::EnsEMBL::Taxonomy::RunnableDB::AddLeftRightIndexes;
 
 use strict;
 use warnings;

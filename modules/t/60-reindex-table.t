@@ -35,14 +35,14 @@ $dbc->do('UPDATE ncbi_taxa_node SET left_index = 0, right_index = 0');
 
 # And we rebuild them
 standaloneJob(
-    'Bio::EnsEMBL::RunnableDB::AddLeftRightIndexes',
+    'Bio::EnsEMBL::Taxonomy::RunnableDB::AddLeftRightIndexes',
     {
         'db_conn'   => $dbc->url,       # Parameters in the test still have to be stringified to mimic the job.input_id table
         'root_node_name'    => $root_node_name, # Searches "root" otherwise
     },
 );
 
-my $node_adaptor = Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor->new($dba);
+my $node_adaptor = Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyNodeAdaptor->new($dba);
 ok( defined $node_adaptor, 'Checking if the node adaptor is defined' );
 
 my $root = $node_adaptor->fetch_all_by_name($root_node_name)->[0];

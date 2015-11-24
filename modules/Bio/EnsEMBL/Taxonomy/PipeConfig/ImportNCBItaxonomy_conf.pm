@@ -21,12 +21,12 @@ limitations under the License.
 
 =head1 NAME
 
-Bio::EnsEMBL::PipeConfig::ImportNCBItaxonomy_conf
+Bio::EnsEMBL::Taxonomy::PipeConfig::ImportNCBItaxonomy_conf
 
 =head1 SYNOPSIS
 
-    init_pipeline.pl Bio::EnsEMBL::PipeConfig::ImportNCBItaxonomy_conf -password <your_password> -ensembl_cvs_root_dir <path_to_your_ensembl_cvs_root>
-    init_pipeline.pl Bio::EnsEMBL::PipeConfig::ImportNCBItaxonomy_conf -password <your_password>
+    init_pipeline.pl Bio::EnsEMBL::Taxonomy::PipeConfig::ImportNCBItaxonomy_conf -password <your_password> -ensembl_cvs_root_dir <path_to_your_ensembl_cvs_root>
+    init_pipeline.pl Bio::EnsEMBL::Taxonomy::PipeConfig::ImportNCBItaxonomy_conf -password <your_password>
 
 =head1 DESCRIPTION  
 
@@ -42,7 +42,7 @@ Questions may also be sent to the Ensembl help desk at
 
 =cut
 
-package Bio::EnsEMBL::PipeConfig::ImportNCBItaxonomy_conf;
+package Bio::EnsEMBL::Taxonomy::PipeConfig::ImportNCBItaxonomy_conf;
 
 use strict;
 use warnings;

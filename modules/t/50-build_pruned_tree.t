@@ -17,9 +17,9 @@ use warnings;
 
 use Test::More;
 
-use Bio::EnsEMBL::TaxonomyNode;
-use Bio::EnsEMBL::DBSQL::TaxonomyDBAdaptor;
-use Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor;
+use Bio::EnsEMBL::Taxonomy::TaxonomyNode;
+use Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyDBAdaptor;
+use Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyNodeAdaptor;
 use Bio::EnsEMBL::Test::MultiTestDB;
 
 my $multi = Bio::EnsEMBL::Test::MultiTestDB->new('multi');
@@ -33,7 +33,7 @@ my $conf = do $conf_file
 
 $conf = $conf->{tax_test};
 									  
-my $node_adaptor = Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor->new($tax);
+my $node_adaptor = Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyNodeAdaptor->new($tax);
 ok( defined $node_adaptor, 'Checking if the node adaptor is defined' );
 
 my @expected;

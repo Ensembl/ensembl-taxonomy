@@ -16,9 +16,9 @@ use strict;
 use warnings;
 use Test::More;
 
-use Bio::EnsEMBL::TaxonomyNode;
-use Bio::EnsEMBL::DBSQL::TaxonomyDBAdaptor;
-use Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor;
+use Bio::EnsEMBL::Taxonomy::TaxonomyNode;
+use Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyDBAdaptor;
+use Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyNodeAdaptor;
 
 use FindBin qw($Bin);
 my $conf_file = "$Bin/db.conf";
@@ -36,7 +36,7 @@ my $dba =
 									   -port   => $conf->{port},
 									   -driver => $conf->{driver} );
 
-my $node_adaptor = Bio::EnsEMBL::DBSQL::TaxonomyNodeAdaptor->new($dba);
+my $node_adaptor = Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyNodeAdaptor->new($dba);
 ok( defined $node_adaptor, 'Checking if the node adaptor is defined' );
 
 ## try simple leaf node for a species
