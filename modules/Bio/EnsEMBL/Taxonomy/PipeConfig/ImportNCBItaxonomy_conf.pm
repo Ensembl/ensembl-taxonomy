@@ -99,8 +99,8 @@ sub pipeline_create_commands {
 sub resource_classes {
     my ($self) = @_;
     return {
-         'default' => {'LSF' => '-q yesterday' },
-         'highmem' => {'LSF' => '-q yesterday -R"select[mem>5000] rusage[mem=5000]" -M5000' },
+         'default' => {'LSF' => '-q normal' },
+         'highmem' => {'LSF' => '-q normal -R"select[mem>5000] rusage[mem=5000]" -M5000' },
     };
 }
 
@@ -217,8 +217,14 @@ sub pipeline_analyses {
                 'work_dir'  => '/tmp/not_so_important', # make sure $self->param('work_dir') contains something by default, or else.
                 'cmd'       => 'rm -rf #work_dir#',
             },
+            -flow_into => {
+                1 => [ 'PostLoadChecks' ],
+            },
         },
-
+        {   -logic_name    => 'PostLoadChecks',
+            -module        => 'Bio::EnsEMBL::Taxonomy::RunnableDB::PostLoadChecks',
+            -wait_for      => ['cleanup'],
+        },
     ];
 }
 
