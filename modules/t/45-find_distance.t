@@ -45,19 +45,19 @@ my $node2 = $node_adaptor->fetch_by_taxon_id(83331);
 ok( defined $node2, 'Checking if the node for 83331 is defined' );
 
 my $d1 = $node_adaptor->distance_between_nodes($node1, $node2);
-is( $d1, 18, 'Checking distance between taxons is as expected');
+is( $d1, 16, 'Checking distance between taxons is as expected');
 
 my $d2 = $node_adaptor->distance_between_nodes($node2, $node1);
-is( $d2, 18, 'Checking distance between taxons in reverse is as expected');
+is( $d2, 16, 'Checking distance between taxons in reverse is as expected');
 
 my $d3 = $node_adaptor->distance_between_nodes($node2, $node2);
 is( $d3, 0, 'Checking distance between same taxons is as expected');
 
 $d1 = $node1->distance_to_node($node2);
-is( $d1, 18, 'Checking distance between taxons is as expected using the object method');
+is( $d1, 16, 'Checking distance between taxons is as expected using the object method');
 
 $d2 = $node2->distance_to_node($node1);
-is( $d2, 18, 'Checking distance between taxons in reverse is as expected using the object method');
+is( $d2, 16, 'Checking distance between taxons in reverse is as expected using the object method');
 
 $d3 = $node2->distance_to_node($node2);
 is( $d3, 0, 'Checking distance between same taxons is as expected using the object method');
