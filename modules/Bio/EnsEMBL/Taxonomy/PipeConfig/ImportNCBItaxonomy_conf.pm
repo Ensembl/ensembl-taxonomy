@@ -135,7 +135,7 @@ sub pipeline_analyses {
                 'cmd'       => 'cd #work_dir# ; tar -xzf #work_dir#/'.$self->o('taxdump_file'),
             },
             -flow_into => {
-                '1->A' => [ 'load_nodes', 'load_names' ],
+                '1->A' => [ 'load_nodes' ],
                 'A->1' => [ 'build_left_right_indices' ],
             },
         },
@@ -147,8 +147,8 @@ sub pipeline_analyses {
                 'delimiter'       => "\t\Q|\E\t?",
             },
             -flow_into => {
-                1 => [ 'zero_parent_id' ],
-                2 => { ':////ncbi_taxa_node' => { 'taxon_id' => '#_0#', 'parent_id' => '#_1#', 'rank' => '#_2#', 'genbank_hidden_flag' => '#_10#'} },
+                1 => [ 'zero_parent_id', 'load_names' ],
+                2 => { ':////ncbi_taxa_node' => { 'taxon_id' => '#_0#', 'parent_id' => '#_1#', 'rank' => '#_2#', 'genbank_hidden_flag' => '#_10#', 'left_index' => 1, 'right_index' => 1, 'root_id' => 1} },
             },
             -rc_name => 'highmem',
         },
@@ -160,6 +160,7 @@ sub pipeline_analyses {
             },
         },
 
+        # This analysis requires the names to be loaded (to find the "root" node)
         {   -logic_name    => 'build_left_right_indices',
             -module        => 'Bio::EnsEMBL::Taxonomy::RunnableDB::AddLeftRightIndexes',
             -rc_name => 'highmem',
@@ -224,7 +225,6 @@ sub pipeline_analyses {
         },
         {   -logic_name    => 'PostLoadChecks',
             -module        => 'Bio::EnsEMBL::Taxonomy::RunnableDB::PostLoadChecks',
-            -wait_for      => ['cleanup'],
         },
     ];
 }
