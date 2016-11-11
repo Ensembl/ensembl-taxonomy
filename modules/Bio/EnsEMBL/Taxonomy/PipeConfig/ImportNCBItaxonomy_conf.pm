@@ -225,7 +225,6 @@ sub pipeline_analyses {
         },
         {   -logic_name    => 'PostLoadChecks',
             -module        => 'Bio::EnsEMBL::Taxonomy::RunnableDB::PostLoadChecks',
-            -wait_for      => ['cleanup'],
         },
     ];
 }
