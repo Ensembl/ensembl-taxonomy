@@ -148,7 +148,7 @@ sub pipeline_analyses {
             },
             -flow_into => {
                 1 => [ 'zero_parent_id', 'load_names' ],
-                2 => { ':////ncbi_taxa_node' => { 'taxon_id' => '#_0#', 'parent_id' => '#_1#', 'rank' => '#_2#', 'genbank_hidden_flag' => '#_10#'} },
+                2 => { ':////ncbi_taxa_node' => { 'taxon_id' => '#_0#', 'parent_id' => '#_1#', 'rank' => '#_2#', 'genbank_hidden_flag' => '#_10#', 'left_index' => 1, 'right_index' => 1, 'root_id' => 1} },
             },
             -rc_name => 'highmem',
         },
