@@ -100,8 +100,8 @@ sub pipeline_create_commands {
 sub resource_classes {
     my ($self) = @_;
     return {
-         'default' => {'LSF' => '-q normal' },
-         'highmem' => {'LSF' => '-q normal -R"select[mem>20000] rusage[mem=20000]" -M20000' },
+         'default' => {'LSF' => '-q production-rh7' },
+         'highmem' => {'LSF' => '-q production-rh7 -M 20000 -R "rusage[mem=20000]"' },
     };
 }
 
