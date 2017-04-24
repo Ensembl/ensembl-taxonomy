@@ -315,6 +315,22 @@ q{ join ncbi_taxa_name nan using (taxon_id) where nan.name like ?},
   return [values %{$node}];
 }
 
+=head2 fetch_by_name_and_class
+
+Description : Fetch a node which has a name and name class LIKE the supplied Strings
+Argument    : Name as String (can contain SQL wildcards)
+Argument    : Name class as String (can contain SQL wildcards)
+Return type : Bio::EnsEMBL::Taxonomy::TaxonomyNode
+=cut
+
+sub fetch_by_name_and_class {
+  my ($self, $name, $class) = @_;
+  my @nodes = $self->fetch_all_by_name_and_class($name,$class);
+  throw "Error, multiple nodes have the same $name for class $class" if ((scalar @nodes) > 1);
+  return _first_element(@nodes);
+}
+
+
 =head2 fetch_all_by_name_and_class
 
 Description : Fetch an array of nodes which have a name and name class LIKE the supplied Strings
