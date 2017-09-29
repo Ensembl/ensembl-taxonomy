@@ -49,7 +49,7 @@ CREATE TABLE ncbi_taxa_node (
   KEY (left_index),
   KEY (right_index)
 
-) COLLATE=latin1_swedish_ci;
+) COLLATE=latin1_swedish_ci ENGINE=MyISAM;
 
 /**
 @table ncbi_taxa_name
@@ -80,6 +80,6 @@ CREATE TABLE ncbi_taxa_name (
   KEY (name),
   KEY (name_class)
 
-) COLLATE=latin1_swedish_ci;
+) COLLATE=latin1_swedish_ci ENGINE=MyISAM;
 
 
