@@ -147,7 +147,7 @@ sub pipeline_analyses {
                 'delimiter'       => "\t\Q|\E\t?",
             },
             -flow_into => {
-                1 => [ 'zero_parent_id', 'load_names' ],
+                1 => [ 'zero_parent_id', 'uniq_names' ],
                 2 => { ':////ncbi_taxa_node' => { 'taxon_id' => '#_0#', 'parent_id' => '#_1#', 'rank' => '#_2#', 'genbank_hidden_flag' => '#_10#', 'left_index' => 1, 'right_index' => 1, 'root_id' => 1} },
             },
             -rc_name => 'highmem',
@@ -169,17 +169,25 @@ sub pipeline_analyses {
             },
         },
 
-
+        {   -logic_name    => 'uniq_names',
+            -module        => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+            -parameters    => {
+                'cmd'       => 'cut -f1-4,7- #work_dir#/names.dmp | uniq > #work_dir#/names.uniq.dmp',
+            },
+            -flow_into => {
+                1 => [ 'load_names' ],
+            },
+        },
 
         {   -logic_name => 'load_names',
             -module     => 'Bio::EnsEMBL::Hive::RunnableDB::JobFactory',
             -parameters => {
-                'inputfile'       => '#work_dir#/names.dmp',
+                'inputfile'       => '#work_dir#/names.uniq.dmp',
                 'delimiter'       => "\t\Q|\E\t?",
             },
             -flow_into => {
                 1 => [ 'load_merged_names' ],
-                2 => { ':////ncbi_taxa_name' => { 'taxon_id' => '#_0#', 'name' => '#_1#', 'name_class' => '#_3#'} },
+                2 => { ':////ncbi_taxa_name' => { 'taxon_id' => '#_0#', 'name' => '#_1#', 'name_class' => '#_2#'} },
             },
             -rc_name => 'highmem',
         },
