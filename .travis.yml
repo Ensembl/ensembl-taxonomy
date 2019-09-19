@@ -31,7 +31,7 @@ install:
     - cpanm --sudo -n JSON
     - cp travisci/MultiTestDB.conf.travisci.mysql  modules/t/MultiTestDB.conf.mysql
     - cp travisci/MultiTestDB.conf.travisci.SQLite modules/t/MultiTestDB.conf.SQLite
-    - cd ensembl && cpanm -v --installdeps .
+    - cd ensembl && cpanm --sudo --installdeps .
     - cd -
 
 script: "./travisci/harness.sh"
