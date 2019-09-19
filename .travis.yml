@@ -1,5 +1,8 @@
 language: "perl"
 
+services:
+  - mysql
+
 perl:
   - "5.26"
   - "5.14"
@@ -23,9 +26,9 @@ before_install:
 
 
 install:
-    - cpanm -n Devel::Cover::Report::Coveralls
-    - cpanm -n DBD::SQLite
-    - cpanm -n JSON
+    - cpanm --sudo -n Devel::Cover::Report::Coveralls
+    - cpanm --sudo -n DBD::SQLite
+    - cpanm --sudo -n JSON
     - cp travisci/MultiTestDB.conf.travisci.mysql  modules/t/MultiTestDB.conf.mysql
     - cp travisci/MultiTestDB.conf.travisci.SQLite modules/t/MultiTestDB.conf.SQLite
     - cd ensembl && cpanm -v --installdeps .
