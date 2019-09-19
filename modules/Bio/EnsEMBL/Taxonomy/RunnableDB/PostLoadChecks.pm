@@ -60,27 +60,36 @@ sub run {
        $self->throw('Count '.$sth_total_count.' is not matching left indexes sum '.$sth_left_index.' and right indexes sum '.$sth_right_index.' .Please contact the Compara team');
     }
     #Checking that there is no duplicated rows in the ncbi_taxa_name table of the ncbi taxonomy database.
-    my $sql_duplicates = 'SELECT taxon_id,name,name_class,count(*) FROM ncbi_taxa_name GROUP BY taxon_id,name,name_class HAVING count(*) > 1;';
+    my $sql_duplicates = 'SELECT taxon_id, name, name_class, count(*) AS duplicate_count FROM ncbi_taxa_name GROUP BY taxon_id, name, name_class HAVING duplicate_count > 1;';
     my $sth_duplicates = $self->data_dbc->prepare($sql_duplicates);
     $sth_duplicates->execute();
     #If there are any duplicated rows, write a message in the hive msg table and delete the duplicates from the ncbi_taxa_name table.
-    if ($sth_duplicates->fetchrow_array())
-    {
-      # Getting all the duplicate items
-      my $all_duplicates = $sth_duplicates->fetchall_arrayref({});
-      foreach my $duplicate (@$all_duplicates) {
-         # Calculate number of rows to delete
-         my $number_of_row_to_delete=$duplicate->{"count(*)"} - 1;
-         # Write in the hive msg table
-         $self->warning('The taxon id '.$duplicate->{"taxon_id"}.' had '.$number_of_row_to_delete.' duplicates for "'.$duplicate->{"name_class"}.'" named "'.$duplicate->{"name"}.'". The duplicates have been cleaned up in the database, Please email info@ncbi.nlm.nih.gov to let them know.');
-         # Delete duplicates
-         my $sql_delete_duplicates= 'DELETE from ncbi_taxa_name where name=? and taxon_id=? and name_class=?  LIMIT ?;';
-         my $sth_delete_duplicates = $self->data_dbc->prepare($sql_delete_duplicates);
-         $sth_delete_duplicates->execute($duplicate->{"name"},$duplicate->{"taxon_id"},$duplicate->{"name_class"},$number_of_row_to_delete);
-      }
+    #if ($sth_duplicates->fetchrow_array())
+    #{
+    my $duplicates = 0;
+
+    # Getting all the duplicate items
+    my $all_duplicates = $sth_duplicates->fetchall_arrayref({});
+    foreach my $duplicate (@$all_duplicates) {
+      # Calculate number of rows to delete
+      my $number_of_row_to_delete=$duplicate->{"duplicate_count"} - 1;
+      # Write in the hive msg table
+      $self->warning('The taxon id '.$duplicate->{"taxon_id"}.' had '.$number_of_row_to_delete.' duplicates for "'.$duplicate->{"name_class"}.'" named "'.$duplicate->{"name"}.'". The duplicates have been cleaned up in the database.');
+      # Delete duplicates
+      my $sql_delete_duplicates= 'DELETE from ncbi_taxa_name where name=? and taxon_id=? and name_class=?  LIMIT ?;';
+      my $sth_delete_duplicates = $self->data_dbc->prepare($sql_delete_duplicates);
+      $sth_delete_duplicates->execute($duplicate->{"name"},$duplicate->{"taxon_id"},$duplicate->{"name_class"},$number_of_row_to_delete);
+
+      $duplicates = 1;
     }
-    else
-    {
+
+    if ($duplicates) {
+      # Look for duplicates again, to check that all the fixes worked.
+      $sth_duplicates->execute();
+      if ($sth_duplicates->fetchrow_array()) {
+        $self->throw('Duplicate names remain after trying to remove them.');
+      }
+    } else {
       # Write in the hive msg table if there is no duplicate
       $self->warning('Found no duplicates in the database')
     }
