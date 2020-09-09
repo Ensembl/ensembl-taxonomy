@@ -80,7 +80,11 @@ sub default_options {
         'copy_service_uri' => "http://production-services.ensembl.org/api/dbcopy/requestjob",
         'tgt_host'         =>  undef,  
         'tgt_db_name'      =>  undef, 
-        'src_incl_tables'  => "ncbi_taxa_name,ncbi_taxa_node", 
+        'src_incl_tables'  =>  undef, 
+        'host' => undef,
+        'port' => undef,
+        'pass' => undef,
+        'user' => undef,
         'payload'       => '{ "src_host": "'.$self->o('host').':'.$self->o('port').'", "src_incl_db" : "'.$self->o('ENV', 'USER').'_ncbi_taxonomy'.$self->o('ensembl_release').'", "tgt_host": "'.$self->o('tgt_host').'", "tgt_db_name": "'.  $self->o('tgt_db_name')  . '","src_incl_tables": "'. $self->o('src_incl_tables') .'"'.',"user" : "'.$self->o('ENV', 'USER').'","email": "'.$self->o('ENV', 'USER').'@ebi.ac.uk"}'
    };
 }
