@@ -77,7 +77,16 @@ sub default_options {
         'taxdump_file'  => 'taxdump.tar.gz',                        # the filename of the dump
 
         'work_dir'      => $ENV{'HOME'}.'/ncbi_taxonomy_loading',
-    };
+        'copy_service_uri' => "http://production-services.ensembl.org/api/dbcopy/requestjob",
+        'tgt_host'         =>  undef,  
+        'tgt_db_name'      =>  undef, 
+        'src_incl_tables'  =>  undef, 
+        'host' => undef,
+        'port' => undef,
+        'pass' => undef,
+        'user' => undef,
+        'payload'       => '{ "src_host": "'.$self->o('host').':'.$self->o('port').'", "src_incl_db" : "'.$self->o('ENV', 'USER').'_ncbi_taxonomy'.$self->o('ensembl_release').'", "tgt_host": "'.$self->o('tgt_host').'", "tgt_db_name": "'.  $self->o('tgt_db_name')  . '","src_incl_tables": "'. $self->o('src_incl_tables') .'"'.',"user" : "'.$self->o('ENV', 'USER').'","email": "'.$self->o('ENV', 'USER').'@ebi.ac.uk"}'
+   };
 }
 
 =head2 pipeline_create_commands
@@ -233,7 +242,23 @@ sub pipeline_analyses {
         },
         {   -logic_name    => 'PostLoadChecks',
             -module        => 'Bio::EnsEMBL::Taxonomy::RunnableDB::PostLoadChecks',
+            -flow_into     => { 1 => ['copy_database'], },
         },
+
+        {
+            -logic_name        => 'copy_database',
+            -module            => 'ensembl.production.hive.ProductionDBCopy',
+            -language          => 'python3',
+            -analysis_capacity => 20,
+            -rc_name           => 'default',
+            -parameters        => {
+                'endpoint'     => $self->o('copy_service_uri'),
+                'payload'      => $self->o('payload') ,
+                'method'       => 'post',
+            },
+        },
+              
+
     ];
 }
 
