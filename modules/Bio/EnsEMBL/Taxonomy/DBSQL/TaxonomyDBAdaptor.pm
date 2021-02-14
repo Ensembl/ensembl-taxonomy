@@ -1,3 +1,4 @@
+=encoding utf8
 
 =head1 LICENSE
 
@@ -15,8 +16,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-=cut
-
 =head1 CONTACT
 
   Please email comments or questions to the public Ensembl
@@ -24,8 +23,6 @@ limitations under the License.
 
   Questions may also be sent to the Ensembl help desk at
   <helpdesk@ensembl.org>.
-
-=cut
 
 =head1 NAME
 
@@ -37,19 +34,19 @@ Specialised DBAdaptor for connecting to the ncbi_taxonomy MySQL database
 
 =head1 SYNOPSIS
 
-#create an adaptor (Registry cannot be used currently)
-my $tax_dba =  Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyDBAdaptor->new(
-									  -user   => $tax_user,
-									  -pass   => $tax_pass,
-									  -dbname => $tax_db,
-									  -host   => $tax_host,
-									  -port   => $tax_port);	
-my $node_adaptor = $tax_dba->get_TaxonomyNodeAdaptor();
+  #create an adaptor (Registry cannot be used currently)
+  my $tax_dba =  Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyDBAdaptor->new(
+    -user   => $tax_user,
+    -pass   => $tax_pass,
+    -dbname => $tax_db,
+    -host   => $tax_host,
+    -port   => $tax_port);
+  my $node_adaptor = $tax_dba->get_TaxonomyNodeAdaptor();
 									  
-=head DESCRIPTION
+=head1 DESCRIPTION
 
 A specialised DBAdaptor allowing connection to an ncbi_taxonomy database. 
-Can be used to retrieve an instance of Bio::EnsEMBL::DBSQL::TaxonomyAdaptor.
+Can be used to retrieve an instance of C<Bio::EnsEMBL::DBSQL::TaxonomyAdaptor>.
 
 =head1 AUTHOR
 
@@ -78,11 +75,19 @@ use Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyNodeAdaptor;
 
 	Description	: Retrieve all adaptors supported by this database
 	Returns		: Hash of adaptor modules by name
+
 =cut
 
 sub get_available_adaptors {
   return {'TaxonomyNode' => 'Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyNodeAdaptor'};
 }
+
+=head2 get_TaxonomyNodeAdaptor
+
+	Description	: Retrieve a C<Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyNodeAdaptor>
+	Returns		: A C<Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyNodeAdaptor> instance
+
+=cut
 
 sub get_TaxonomyNodeAdaptor {
 	my ($self) = @_;
@@ -90,4 +95,3 @@ sub get_TaxonomyNodeAdaptor {
 }
 
 1;
-
