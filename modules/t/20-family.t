@@ -20,25 +20,23 @@ use Test::More;
 use Bio::EnsEMBL::Taxonomy::TaxonomyNode;
 use Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyDBAdaptor;
 use Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyNodeAdaptor;
+use Bio::EnsEMBL::Test::MultiTestDB;
 
 use FindBin qw($Bin);
-my $conf_file = "$Bin/db.conf";
 
+my $conf_file = "$Bin/db.conf";
 my $conf = do $conf_file
   || die "Could not load configuration from " . $conf_file;
 
 $conf = $conf->{tax_test};
 
-my $dba =  Bio::EnsEMBL::DBSQL::DBAdaptor->new(
-									  -user   => $conf->{user},
-									  -pass   => $conf->{pass},
-									  -dbname => $conf->{db},
-									  -host   => $conf->{host},
-									  -port   => $conf->{port},
-									  -driver => $conf->{driver});
-									  
+my $test_db_dir = $FindBin::Bin;
+my $testdb  = Bio::EnsEMBL::Test::MultiTestDB->new('multi', $test_db_dir);
+
+my $dba = $testdb->get_DBAdaptor('taxonomy');
+
 my $node_adaptor = Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyNodeAdaptor->new($dba);
-		
+
 ok( defined $node_adaptor, 'Checking if the node adaptor is defined' );
 
 my $node = $node_adaptor->fetch_by_taxon_id( $conf->{taxon_id} )
