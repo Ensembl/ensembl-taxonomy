@@ -1,6 +1,8 @@
+=encoding utf8
+
 =head1 LICENSE
 
-Copyright [2009-2019] EMBL-European Bioinformatics Institute
+Copyright [2009-2021] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,10 +16,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-=cut
-
-=pod
-
 =head1 CONTACT
 
   Please email comments or questions to the public Ensembl
@@ -25,10 +23,6 @@ limitations under the License.
 
   Questions may also be sent to the Ensembl help desk at
   <helpdesk@ensembl.org>.
- 
-__END__
-
-=pod
 
 =head1 NAME
 
@@ -36,14 +30,14 @@ Bio::EnsEMBL::Taxonomy::TaxonomyNode
 
 =head1 SYNOPSIS
 
-my $node = $node_adaptor->fetch_by_taxon_id(511145);
-# print some info
-printf "Node %d is %s %s\n",$node->taxon_id(),$node->rank(),$node->names()->{'scientific name'}->[0];
-# Finding ancestors
-my @lineage = @{$node_adaptor->fetch_ancestors($node)};
-for my $node (@lineage) {
+  my $node = $node_adaptor->fetch_by_taxon_id(511145);
+  # print some info
+  printf "Node %d is %s %s\n",$node->taxon_id(),$node->rank(),$node->names()->{'scientific name'}->[0];
+  # Finding ancestors
+  my @lineage = @{$node_adaptor->fetch_ancestors($node)};
+  for my $node (@lineage) {
     printf "Node %d is %s %s\n",$node->taxon_id(),$node->rank(),$node->names()->{'scientific name'}->[0];
-}
+  }
 
 =head1 DESCRIPTION
 
@@ -130,39 +124,47 @@ sub new {
 
 =head2 taxon_id
 
-Description : Taxon ID of this node
-Return type : Int
+  Description : Taxon ID of this node
+  Return type : Int
+
 =cut
 
 sub taxon_id {
   my ($self) = @_;
   return $self->{'taxon_id'};
 }
+
 =head2 parent_id
 
-Taxon ID of the parent of this node
-Return type : Int
+  Taxon ID of the parent of this node
+  Return type : Int
+
 =cut
 
 sub parent_id {
   my ($self) = @_;
   return $self->{'parent_id'};
 }
+
 =head2 root_id
 
-Description : Taxon ID of the root node for the taxonomy.
-Return type : Int
+  Description : Taxon ID of the root node for the taxonomy.
+  Return type : Int
+
 =cut
 
 sub root_id {
   my ($self) = @_;
   return $self->{'root_id'};
 }
+
 =head2 names 
 
-Description : Hashref of names for this node. Hash keys are the class of name, and values are arrays of names (as you can have more than one name for each class)
-Return type : hashref
+  Description : Hashref of names for this node. Hash keys are the class of name, and values are arrays of names (as you can have more than one name for each class)
+  Return type : hashref
+
 =cut
+
 sub names {
   my ($self) = @_;
   return $self->{'names'};
@@ -173,19 +175,24 @@ sub name {
   $name_class ||= 'scientific name';
   return $self->names()->{$name_class}->[0];
 }
+
 =head2 rank
 
-Description : Taxonomic rank
-Return type : String
+  Description : Taxonomic rank
+  Return type : String
+
 =cut
+
 sub rank {
   my ($self) = @_;
   return $self->{'rank'};
 }
+
 =head2 num_descendants
 
-Description : Total number of descendants in the tree
-Return type : Int
+  Description : Total number of descendants in the tree
+  Return type : Int
+
 =cut
 
 sub num_descendants {
@@ -196,9 +203,10 @@ sub num_descendants {
 
 =head2 dba
 
-Description : Getter/setter for core database adaptor for this node
-Argument    : (optional) Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyNodeAdaptor
-Return type : Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyNodeAdaptor
+  Description : Getter/setter for core database adaptor for this node
+  Argument    : (optional) Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyNodeAdaptor
+  Return type : Bio::EnsEMBL::Taxonomy::DBSQL::TaxonomyNodeAdaptor
+
 =cut
 
 sub dba {
@@ -211,10 +219,12 @@ sub dba {
 
 =head2 root
 
-Description	  : Getter/setter for root node for this node (fetched lazily using adaptor)
-Argument    : (optional) Bio::EnsEMBL::Taxonomy::TaxonomyNode
-Return type   : Bio::EnsEMBL::Taxonomy::TaxonomyNode
+  Description	  : Getter/setter for root node for this node (fetched lazily using adaptor)
+  Argument    : (optional) Bio::EnsEMBL::Taxonomy::TaxonomyNode
+  Return type   : Bio::EnsEMBL::Taxonomy::TaxonomyNode
+
 =cut
+
 sub root {
   my ($self, $arg) = @_;
   if (defined $arg) {
@@ -228,9 +238,10 @@ sub root {
 
 =head2 parent
 
-Description	  : Getter/setter for parent node for this node (fetched lazily using adaptor)
-Argument      : (optional) Bio::EnsEMBL::Taxonomy::TaxonomyNode
-Return type   : Bio::EnsEMBL::Taxonomy::TaxonomyNode
+  Description	  : Getter/setter for parent node for this node (fetched lazily using adaptor)
+  Argument      : (optional) Bio::EnsEMBL::Taxonomy::TaxonomyNode
+  Return type   : Bio::EnsEMBL::Taxonomy::TaxonomyNode
+
 =cut
 
 sub parent {
@@ -246,9 +257,10 @@ sub parent {
 
 =head2 children
 
-Description	  : Getter/setter for arrayref of child nodes for this node (fetched lazily using adaptor)
-Argument      : (optional) Arrayref of Bio::EnsEMBL::Taxonomy::TaxonomyNode
-Return type   : Arrayref of Bio::EnsEMBL::Taxonomy::TaxonomyNode
+  Description	  : Getter/setter for arrayref of child nodes for this node (fetched lazily using adaptor)
+  Argument      : (optional) Arrayref of Bio::EnsEMBL::Taxonomy::TaxonomyNode
+  Return type   : Arrayref of Bio::EnsEMBL::Taxonomy::TaxonomyNode
+
 =cut
 
 sub children {
@@ -264,8 +276,9 @@ sub children {
 
 =head2 is_root
 
-Description		: Returns 1 if this is a root node with no parents
-Return type     : Int
+  Description		: Returns 1 if this is a root node with no parents
+  Return type     : Int
+
 =cut
 
 sub is_root {
@@ -275,8 +288,9 @@ sub is_root {
 
 =head2 is_leaf
 
-Description		: Returns 1 if this is a leaf node with no children
-Return type     : Int
+  Description		: Returns 1 if this is a leaf node with no children
+  Return type     : Int
+
 =cut
 
 sub is_leaf {
@@ -286,8 +300,9 @@ sub is_leaf {
 
 =head2 is_branch
 
-Description		: Returns 1 if this is a branch node with more than one direct child
-Return type     : Int
+  Description		: Returns 1 if this is a branch node with more than one direct child
+  Return type     : Int
+
 =cut
 
 sub is_branch {
@@ -298,9 +313,11 @@ sub is_branch {
   return $self->{is_branch};
 }
 
-=head2 add_all_descendants 
-Description		: Uses database to fetch all descendants for this node from database and assemble them into a tree
-Return type     : None
+=head2 add_all_descendants
+ 
+  Description		: Uses database to fetch all descendants for this node from database and assemble them into a tree
+  Return type     : None
+
 =cut
 
 sub add_all_descendants {
@@ -309,10 +326,12 @@ sub add_all_descendants {
   return;
 }
 
-=head2 add_child 
-Description		: Add child node (if not already present)
-Argument        : Arrayref of Bio::EnsEMBL::Taxonomy::TaxonomyNode
-Return type     : None
+=head2 add_child
+
+  Description		: Add child node (if not already present)
+  Argument        : Arrayref of Bio::EnsEMBL::Taxonomy::TaxonomyNode
+  Return type     : None
+
 =cut
 
 sub add_child {
@@ -324,8 +343,10 @@ sub add_child {
 }
 
 =head2 traverse_tree
-Description 	: Walk the tree recursively, invoking the supplied subroutine on each node
-Argument 		: Subroutine reference, accepting current node and depth
+
+  Description 	: Walk the tree recursively, invoking the supplied subroutine on each node
+  Argument 		: Subroutine reference, accepting current node and depth
+
 =cut
 
 sub traverse_tree {
@@ -339,9 +360,11 @@ sub traverse_tree {
 }
 
 =head2 count_leaves  
-Description		: Counts all leaf or DBA nodes below this node
-Argument        : (Optional) closure checking whether to count a node or not
-Return type     : Int
+
+  Description		: Counts all leaf or DBA nodes below this node
+  Argument        : (Optional) closure checking whether to count a node or not
+  Return type     : Int
+
 =cut 
 
 sub count_leaves {
@@ -361,9 +384,11 @@ sub count_leaves {
 }
 
 =head2 distance_to_node
-Description 	: Calculate the distance between this and the supplied node in steps via the closest common ancestor
-Argument 		: Bio::EnsEMBL::Taxonomy::TaxonomyNode
-Return type		: Int
+
+  Description 	: Calculate the distance between this and the supplied node in steps via the closest common ancestor
+  Argument 		: Bio::EnsEMBL::Taxonomy::TaxonomyNode
+  Return type		: Int
+
 =cut
 
 sub distance_to_node {
@@ -372,9 +397,11 @@ sub distance_to_node {
 }
 
 =head2 has_ancestor
-Description : Test if the ancestors of this node include the supplied node
-Argument : Putative ancestor
-Return: 1 if the supplied node is an ancestor of this node
+
+  Description : Test if the ancestors of this node include the supplied node
+  Argument : Putative ancestor
+  Return: 1 if the supplied node is an ancestor of this node
+
 =cut
 
 sub has_ancestor {
@@ -383,8 +410,10 @@ sub has_ancestor {
 }
 
 =head2 to_string
-Description : Return simple string representation of node
-Argument : (Optional) name_class to display (default is 'scientific name')
+
+  Description : Return simple string representation of node
+  Argument : (Optional) name_class to display (default is 'scientific name')
+
 =cut
 
 sub to_string {
@@ -394,7 +423,9 @@ sub to_string {
 }
 
 =head2 to_tree_string
-Description: Render tree as a string
+
+  Description: Render tree as a string
+
 =cut
 
 sub to_tree_string {
@@ -411,4 +442,3 @@ sub to_tree_string {
 
 
 1;
-
