@@ -49,7 +49,7 @@ sub default_options {
 
     taxdump_loc  => 'ftp://ftp.ncbi.nih.gov/pub/taxonomy',
     taxdump_file => 'taxdump.tar.gz',
-    scratch_dir  => catdir('/hps/scratch/', $self->o('user'), '/ncbi_taxonomy_loading'),
+    scratch_dir  => catdir('/hps/scratch/flicek/ensembl', $self->o('env_user'), $self->o('pipeline_name')),
 
     base_dir => $ENV{'BASE_DIR'},
 
