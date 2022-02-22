@@ -57,6 +57,7 @@ sub default_options {
     src_host         => undef,
     tgt_host         => undef,
     tgt_db_name      => undef,
+    copy_to_tgt_host => 0,
     payload          =>
       '{'.
         '"src_host": "'.$self->o('pipeline_db', '-host').':'.$self->o('pipeline_db', '-port').'", '.
@@ -225,8 +226,9 @@ sub pipeline_analyses {
       -module     => 'Bio::EnsEMBL::Taxonomy::RunnableDB::PostLoadChecks',
       -parameters => {
                        tgt_host => $self->o('tgt_host'),
+                       copy_to_tgt_host => $self->o('copy_to_tgt_host'),
                      },
-      -flow_into  => { 1 => WHEN('defined #tgt_host#' => [ 'copy_database' ]), },
+      -flow_into  => { 1 => WHEN('defined #tgt_host# && #copy_to_tgt_host#' => [ 'copy_database' ]), },
     },
     {
       -logic_name => 'copy_database',
