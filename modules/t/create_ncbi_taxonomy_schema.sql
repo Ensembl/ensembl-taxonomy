@@ -56,7 +56,7 @@ DROP TABLE IF EXISTS `ncbi_taxa_name`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `ncbi_taxa_name` (
   `taxon_id` int(10) unsigned NOT NULL,
-  `name` varchar(255) DEFAULT NULL,
+  `name` varchar(500) DEFAULT NULL,
   `name_class` varchar(50) DEFAULT NULL,
   KEY `taxon_id` (`taxon_id`),
   KEY `name` (`name`),

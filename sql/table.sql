@@ -69,7 +69,7 @@ CREATE TABLE ncbi_taxa_node (
 
 CREATE TABLE ncbi_taxa_name (
   taxon_id                    int(10) unsigned NOT NULL,
-  name                        varchar(255) NOT NULL,
+  name                        varchar(500) NOT NULL,
   name_class                  varchar(50) NOT NULL,
 
   FOREIGN KEY (taxon_id) REFERENCES ncbi_taxa_node(taxon_id),
