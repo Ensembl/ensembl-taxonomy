@@ -1,7 +1,7 @@
 =head1 LICENSE
 
 Copyright [1999-2015] Wellcome Trust Sanger Institute and the EMBL-European Bioinformatics Institute
-Copyright [2016-2021] EMBL-European Bioinformatics Institute
+Copyright [2016-2022] EMBL-European Bioinformatics Institute
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -57,6 +57,7 @@ sub default_options {
         src_host         => undef,
         tgt_host         => undef,
         tgt_db_name      => undef,
+        copy_to_tgt_host => 0,
         payload          =>
             '{' .
                 '"src_host": "' . $self->o('pipeline_db', '-host') . ':' . $self->o('pipeline_db', '-port') . '", ' .
@@ -228,8 +229,9 @@ sub pipeline_analyses {
             -module     => 'Bio::EnsEMBL::Taxonomy::RunnableDB::PostLoadChecks',
             -parameters => {
                 tgt_host => $self->o('tgt_host'),
+                copy_to_tgt_host => $self->o('copy_to_tgt_host'),
             },
-            -flow_into  => { 1 => WHEN('defined #tgt_host# && defined #copy_service_uri#' => [ 'copy_database' ]), },
+            -flow_into  => { 1 => WHEN('defined #tgt_host# && #copy_to_tgt_host# && defined #copy_service_uri#' => [ 'copy_database' ]), },
         },
         {
             -logic_name => 'copy_database',
