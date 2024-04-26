@@ -92,8 +92,8 @@ sub pipeline_wide_parameters {
 sub resource_classes {
     my ($self) = @_;
     return {
-        'default' => { LSF => '-q production' },
-        '16GB'    => { LSF => '-q production -M 16000' },
+        'default' => { LSF => '-q production' ,         SLURM => '--time=1:00:00 --mem=100' },
+        '16GB'    => { LSF => '-q production -M 16000', SLURM => '--time=1-00:00:00 --mem=16000' },
     };
 }
 
