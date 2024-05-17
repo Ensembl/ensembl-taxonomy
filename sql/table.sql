@@ -32,7 +32,7 @@
 @see ncbi_taxa_name
 */
 
-CREATE TABLE ncbi_taxa_node (
+CREATE TABLE IF NOT EXISTS ncbi_taxa_node (
   taxon_id                        int(10) unsigned NOT NULL,
   parent_id                       int(10) unsigned NOT NULL,
 
@@ -67,7 +67,7 @@ CREATE TABLE ncbi_taxa_node (
 */
 
 
-CREATE TABLE ncbi_taxa_name (
+CREATE TABLE IF NOT EXISTS ncbi_taxa_name (
   taxon_id                    int(10) unsigned NOT NULL,
   name                        varchar(500) NOT NULL,
   name_class                  varchar(50) NOT NULL,

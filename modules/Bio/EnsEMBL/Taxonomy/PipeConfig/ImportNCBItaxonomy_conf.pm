@@ -68,7 +68,6 @@ sub default_options {
         '"user": "'.$self->o('user').'"'.
       '}',
     metadata_host_uri => undef,
-    metadata_db_name  => undef,
   };
 }
 
@@ -118,6 +117,7 @@ sub pipeline_analyses {
                        cmd => 'cd #scratch_dir# ; tar -xzf #scratch_dir#/#taxdump_file#',
                      },
       -flow_into  => {
+
                        '1->A' => [ 'load_nodes' ],
                        'A->1' => [ 'build_left_right_indices' ],
                      },
@@ -232,6 +232,7 @@ sub pipeline_analyses {
                      },
       -flow_into  => { 1 => WHEN(
                                     'defined #tgt_host# && #copy_to_tgt_host#' => [ 'copy_database' ],
+                                    'defined #metadata_db_uri#'  => ['dump_taxonomy_name_table_into_metadata_db']
                                 ),
                      },
     },
@@ -245,36 +246,64 @@ sub pipeline_analyses {
                        payload  => $self->o('payload'),
                        method   => 'post',
                     },
-      -flow_into  => { 1 => WHEN(
-                            'defined #metadata_host_uri# && #metadata_db_name#'  => ['update_taxonomy_node_table_in_metadata_db']
-                        ),
-      },
     },
+
     {
-      -logic_name => 'update_taxonomy_node_table_in_metadata_db',
-      -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SqlCmd',
+      -logic_name => 'dump_taxonomy_name_table_into_metadata_db',
+      -module     => 'Bio::EnsEMBL::Hive::RunnableDB::MySQLTransfer',
       -parameters => {
-                       db_conn => $self->o('metadata_host_uri').$self->o('metadata_db_name'),
-                       sql => qq{ INSERT INTO } . $self->o('metadata_db_name'). qq{.ncbi_taxa_node (taxon_id, parent_id,
-                                  rank, genbank_hidden_flag, left_index, right_index, root_id)
-                                  SELECT taxon_id, parent_id, rank, genbank_hidden_flag, left_index, right_index, root_id
-                                  from } . $self->o('tgt_db_name') .
-                                  qq{.ncbi_taxa_node t2 order by taxon_id
-                                  on duplicate key update taxon_id = t2.taxon_id, parent_id = t2.parent_id, rank = t2.rank,
-                                  genbank_hidden_flag=t2.genbank_hidden_flag, left_index=t2.left_index, right_index=t2.right_index,
-                                  root_id=t2.root_id;}
+                       dest_db_conn => $self->o('metadata_db_uri'),
+                       table => 'ncbi_taxa_name',
+                       renamed_table => 'ncbi_taxa_name_new'
                       },
-      -flow_into  => { 1 => 'update_taxonomy_name_table_in_metadata_db' },
+      -flow_into  => { 1 => 'create_taxonomy_table_in_metadata_db_if_not_exists' },
     },
     {
-      -logic_name => 'update_taxonomy_name_table_in_metadata_db',
+      -logic_name => 'create_taxonomy_table_in_metadata_db_if_not_exists',
+      -module     => 'Bio::EnsEMBL::Hive::RunnableDB::DbCmd',
+      -parameters => {
+                        db_conn => $self->o('metadata_db_uri'),
+                        input_file =>  $self->o('base_dir') . '/ensembl-taxonomy/sql/table.sql'
+                      },
+      -flow_into  => { 1 => 'dump_taxonomy_node_table_into_metadata_db' },
+    },
+    {
+      -logic_name => 'dump_taxonomy_node_table_into_metadata_db',
+      -module     => 'Bio::EnsEMBL::Hive::RunnableDB::MySQLTransfer',
+      -parameters => {
+                       dest_db_conn => $self->o('metadata_db_uri'),
+                       table => 'ncbi_taxa_node',
+                       renamed_table => 'ncbi_taxa_node_new'
+                      },
+      -flow_into  => { 1 => 'rename_taxonomy_table_in_metadata_db' },
+    },
+
+    {
+      -logic_name => 'rename_taxonomy_table_in_metadata_db',
       -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SqlCmd',
       -parameters => {
-                       db_conn => $self->o('metadata_host_uri').$self->o('metadata_db_name'),
-                       sql => qq{ INSERT INTO } . $self->o('metadata_db_name') . qq{.ncbi_taxa_name (taxon_id, name, name_class)
-                            SELECT taxon_id, name, name_class from } . $self->o('tgt_db_name') . qq{.ncbi_taxa_name t2 order by taxon_id
-                            on duplicate key update taxon_id = t2.taxon_id, name = t2.name, name_class = t2.name_class;
-                       }
+                        db_conn => $self->o('metadata_db_uri'),
+                        sql => [
+                                qw{
+                                 },
+
+                                 "RENAME TABLE ncbi_taxa_name TO ncbi_taxa_name_back",
+                                 "RENAME TABLE ncbi_taxa_name_new TO ncbi_taxa_name",
+                                 "RENAME TABLE ncbi_taxa_node TO ncbi_taxa_node_back",
+                                 "RENAME TABLE ncbi_taxa_node_new TO ncbi_taxa_node",
+                               ]
+                      },
+      -flow_into  => { 1 => 'drop_back_up_taxonomy_table_in_metadata_db' },
+    },
+    {
+      -logic_name => 'drop_back_up_taxonomy_table_in_metadata_db',
+      -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SqlCmd',
+      -parameters => {
+                        db_conn => $self->o('metadata_db_uri'),
+                        sql => [
+                                 "DROP TABLE IF EXISTS ncbi_taxa_name_back",
+                                 "DROP TABLE IF EXISTS ncbi_taxa_node_back",
+                               ]
                       },
     },
   ];
