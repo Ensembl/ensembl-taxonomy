@@ -19,7 +19,7 @@ limitations under the License.
 
 Bio::EnsEMBL::Taxonomy::PipeConfig::ImportNCBItaxonomy_conf
 
-=head1 DESCRIPTION  
+=head1 DESCRIPTION
 
 A pipeline to import NCBI taxonomy data into a ncbi_taxonomy database
 
@@ -53,21 +53,22 @@ sub default_options {
 
         base_dir         => $ENV{'BASE_DIR'},
 
-        copy_service_uri => $ENV{'DBCOPY_API_URI'},
-        src_host         => undef,
-        tgt_host         => undef,
-        tgt_db_name      => undef,
-        copy_to_tgt_host => 0,
-        payload          =>
-            '{' .
-                '"src_host": "' . $self->o('pipeline_db', '-host') . ':' . $self->o('pipeline_db', '-port') . '", ' .
-                '"src_incl_db": "' . $self->o('user') . '_' . $self->o('pipeline_name') . '", ' .
-                '"src_incl_tables": "ncbi_taxa_name,ncbi_taxa_node", ' .
-                '"tgt_host": "' . $self->o('tgt_host') . '", ' .
-                '"tgt_db_name": "' . $self->o('tgt_db_name') . '", ' .
-                '"user": "' . $self->o('user') . '"' .
-                '}',
-    };
+    copy_service_uri => $ENV{'DBCOPY_API_URI'},
+    src_host         => undef,
+    tgt_host         => undef,
+    tgt_db_name      => undef,
+    copy_to_tgt_host => 0,
+    payload          =>
+      '{'.
+        '"src_host": "'.$self->o('pipeline_db', '-host').':'.$self->o('pipeline_db', '-port').'", '.
+        '"src_incl_db": "'.$self->o('user').'_'.$self->o('pipeline_name').'", '.
+        '"src_incl_tables": "ncbi_taxa_name,ncbi_taxa_node", '.
+        '"tgt_host": "'.$self->o('tgt_host').'", '.
+        '"tgt_db_name": "'.$self->o('tgt_db_name').'", '.
+        '"user": "'.$self->o('user').'"'.
+      '}',
+    metadata_host_uri => undef,
+  };
 }
 
 sub pipeline_create_commands {
@@ -98,153 +99,214 @@ sub resource_classes {
 }
 
 sub pipeline_analyses {
-    my ($self) = @_;
-    return [
-        {
-            -logic_name => 'download_tarball',
-            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-            -input_ids  => [ {} ],
-            -parameters => {
-                cmd => 'curl #taxdump_loc#/#taxdump_file# > #scratch_dir#/#taxdump_file#',
-            },
-            -flow_into  => { 1 => [ 'untar' ], },
-        },
-        {
-            -logic_name => 'untar',
-            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-            -parameters => {
-                cmd => 'cd #scratch_dir# ; tar -xzf #scratch_dir#/#taxdump_file#',
-            },
-            -flow_into  => {
-                '1->A' => [ 'load_nodes' ],
-                'A->1' => [ 'build_left_right_indices' ],
-            },
-        },
-        {
-            -logic_name => 'load_nodes',
-            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::JobFactory',
-            -rc_name    => '16GB',
-            -parameters => {
-                inputfile => '#scratch_dir#/nodes.dmp',
-                delimiter => "\t\Q|\E\t?",
-            },
-            -flow_into  => {
-                1 => [ 'zero_parent_id', 'uniq_names' ],
-                2 => { '?table_name=ncbi_taxa_node' =>
-                    {
-                        'taxon_id'            => '#_0#',
-                        'parent_id'           => '#_1#',
-                        'rank'                => '#_2#',
-                        'genbank_hidden_flag' => '#_10#',
-                        'left_index'          => 1,
-                        'right_index'         => 1,
-                        'root_id'             => 1
-                    }
-                },
-            },
-        },
-        {
-            -logic_name => 'zero_parent_id',
-            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SqlCmd',
-            -parameters => {
-                sql => "update ncbi_taxa_node set parent_id=0 where parent_id=taxon_id",
-            },
-        },
-        # This analysis requires the names to be loaded (to find the "root" node)
-        {
-            -logic_name => 'build_left_right_indices',
-            -module     => 'Bio::EnsEMBL::Taxonomy::RunnableDB::AddLeftRightIndexes',
-            -flow_into  => { 1 => [ 'add_import_date' ], },
-        },
-        {
-            -logic_name => 'uniq_names',
-            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-            -parameters => {
-                cmd => 'cut -f1-4,7- #scratch_dir#/names.dmp | uniq > #scratch_dir#/names.uniq.dmp',
-            },
-            -flow_into  => { 1 => [ 'load_names' ], },
-        },
-        {
-            -logic_name => 'load_names',
-            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::JobFactory',
-            -rc_name    => '16GB',
-            -parameters => {
-                inputfile => '#scratch_dir#/names.uniq.dmp',
-                delimiter => "\t\Q|\E\t?",
-            },
-            -flow_into  => {
-                1 => [ 'load_merged_names' ],
-                2 => { '?table_name=ncbi_taxa_name' =>
-                    {
-                        'taxon_id'   => '#_0#',
-                        'name'       => '#_1#',
-                        'name_class' => '#_2#'
-                    }
-                },
-            },
-        },
-        {
-            -logic_name => 'load_merged_names',
-            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::JobFactory',
-            -parameters => {
-                inputfile => '#scratch_dir#/merged.dmp',
-                delimiter => "\t\Q|\E\t?",
-            },
-            -flow_into  => {
-                1 => [ 'web_name_patches' ],
-                2 => { '?table_name=ncbi_taxa_name' =>
-                    {
-                        'name'       => '#_0#',
-                        'taxon_id'   => '#_1#',
-                        'name_class' => 'merged_taxon_id'
-                    }
-                },
-            },
-        },
-        {
-            -logic_name => 'web_name_patches',
-            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::DbCmd',
-            -parameters => {
-                input_file => $self->o('base_dir') . '/ensembl-taxonomy/sql/web_name_patches.sql',
-            },
-        },
-        {
-            -logic_name => 'add_import_date',
-            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SqlCmd',
-            -parameters => {
-                sql => 'INSERT INTO ncbi_taxa_name (taxon_id, name_class, name) SELECT taxon_id, "import date", CURRENT_TIMESTAMP FROM ncbi_taxa_node WHERE parent_id=0 GROUP BY taxon_id',
-            },
-            -flow_into  => { 1 => [ 'cleanup' ], },
-        },
-        {
-            -logic_name => 'cleanup',
-            -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
-            -parameters => {
-                cmd => 'rm -rf #scratch_dir#',
-            },
-            -flow_into  => { 1 => [ 'post_load_checks' ], },
-        },
-        {
-            -logic_name => 'post_load_checks',
-            -module     => 'Bio::EnsEMBL::Taxonomy::RunnableDB::PostLoadChecks',
-            -parameters => {
-                tgt_host => $self->o('tgt_host'),
-                copy_to_tgt_host => $self->o('copy_to_tgt_host'),
-            },
-            -flow_into  => { 1 => WHEN('defined #tgt_host# && #copy_to_tgt_host# && defined #copy_service_uri#' => [ 'copy_database' ]), },
-        },
-        {
-            -logic_name => 'copy_database',
-            -module     => 'ensembl.production.hive.ProductionDBCopy',
-            -language   => 'python3',
-            -rc_name    => 'default',
-            -parameters => {
-                endpoint => $self->o('copy_service_uri'),
-                payload  => $self->o('payload'),
-                method   => 'post',
-            },
-        },
-    ];
+  my ($self) = @_;
+  return [
+    {
+      -logic_name => 'download_tarball',
+      -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+      -input_ids  => [ {} ],
+      -parameters => {
+                       cmd => 'curl #taxdump_loc#/#taxdump_file# > #scratch_dir#/#taxdump_file#',
+                     },
+      -flow_into  => { 1 => [ 'untar'], },
+    },
+    {
+      -logic_name => 'untar',
+      -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+      -parameters => {
+                       cmd => 'cd #scratch_dir# ; tar -xzf #scratch_dir#/#taxdump_file#',
+                     },
+      -flow_into  => {
+
+                       '1->A' => [ 'load_nodes' ],
+                       'A->1' => [ 'build_left_right_indices' ],
+                     },
+    },
+    {
+      -logic_name => 'load_nodes',
+      -module     => 'Bio::EnsEMBL::Hive::RunnableDB::JobFactory',
+      -rc_name    => '16GB',
+      -parameters => {
+                       inputfile => '#scratch_dir#/nodes.dmp',
+                       delimiter => "\t\Q|\E\t?",
+                     },
+      -flow_into  => {
+                       1 => [ 'zero_parent_id', 'uniq_names' ],
+                       2 => { '?table_name=ncbi_taxa_node' =>
+                              { 'taxon_id' => '#_0#',
+                                'parent_id' => '#_1#',
+                                'rank' => '#_2#',
+                                'genbank_hidden_flag' => '#_10#',
+                                'left_index' => 1,
+                                'right_index' => 1,
+                                'root_id' => 1
+                              }
+                            },
+                      },
+    },
+    {
+      -logic_name => 'zero_parent_id',
+      -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SqlCmd',
+      -parameters => {
+                       sql => "update ncbi_taxa_node set parent_id=0 where parent_id=taxon_id",
+                     },
+    },
+    # This analysis requires the names to be loaded (to find the "root" node)
+    {
+      -logic_name => 'build_left_right_indices',
+      -module     => 'Bio::EnsEMBL::Taxonomy::RunnableDB::AddLeftRightIndexes',
+      -flow_into  => { 1 => [ 'add_import_date' ], },
+    },
+    {
+      -logic_name => 'uniq_names',
+      -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+      -parameters => {
+                       cmd => 'cut -f1-4,7- #scratch_dir#/names.dmp | uniq > #scratch_dir#/names.uniq.dmp',
+                     },
+      -flow_into  => { 1 => [ 'load_names' ], },
+    },
+    {
+      -logic_name => 'load_names',
+      -module     => 'Bio::EnsEMBL::Hive::RunnableDB::JobFactory',
+      -rc_name    => '16GB',
+      -parameters => {
+                       inputfile => '#scratch_dir#/names.uniq.dmp',
+                       delimiter => "\t\Q|\E\t?",
+                     },
+      -flow_into  => {
+                       1 => [ 'load_merged_names' ],
+                       2 => { '?table_name=ncbi_taxa_name' =>
+                              { 'taxon_id' => '#_0#',
+                                'name' => '#_1#',
+                                'name_class' => '#_2#'
+                              }
+                            },
+                     },
+    },
+    {
+      -logic_name => 'load_merged_names',
+      -module     => 'Bio::EnsEMBL::Hive::RunnableDB::JobFactory',
+      -parameters => {
+                       inputfile => '#scratch_dir#/merged.dmp',
+                       delimiter => "\t\Q|\E\t?",
+                     },
+      -flow_into  => {
+                       1 => [ 'web_name_patches' ],
+                       2 => { '?table_name=ncbi_taxa_name' =>
+                              { 'name' => '#_0#',
+                                'taxon_id' => '#_1#',
+                                'name_class' => 'merged_taxon_id'
+                              }
+                            },
+                      },
+    },
+    {
+      -logic_name    => 'web_name_patches',
+      -module        => 'Bio::EnsEMBL::Hive::RunnableDB::DbCmd',
+      -parameters    => {
+                          input_file => $self->o('base_dir').'/ensembl-taxonomy/sql/web_name_patches.sql',
+                        },
+    },
+    {
+      -logic_name => 'add_import_date',
+      -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SqlCmd',
+      -parameters => {
+                       sql => 'INSERT INTO ncbi_taxa_name (taxon_id, name_class, name) SELECT taxon_id, "import date", CURRENT_TIMESTAMP FROM ncbi_taxa_node WHERE parent_id=0 GROUP BY taxon_id',
+                     },
+      -flow_into  => { 1 => [ 'cleanup' ], },
+    },
+    {
+      -logic_name => 'cleanup',
+      -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SystemCmd',
+      -parameters => {
+                       cmd => 'rm -rf #scratch_dir#',
+                     },
+      -flow_into  => { 1 => [ 'post_load_checks' ], },
+    },
+    {
+      -logic_name => 'post_load_checks',
+      -module     => 'Bio::EnsEMBL::Taxonomy::RunnableDB::PostLoadChecks',
+      -parameters => {
+                       tgt_host => $self->o('tgt_host'),
+                       copy_to_tgt_host => $self->o('copy_to_tgt_host'),
+                     },
+      -flow_into  => { 1 => WHEN(
+                                    'defined #tgt_host# && #copy_to_tgt_host#' => [ 'copy_database' ],
+                                    'defined #metadata_db_uri#'  => ['dump_taxonomy_name_table_into_metadata_db']
+                                ),
+                     },
+    },
+    {
+      -logic_name => 'copy_database',
+      -module     => 'ensembl.production.hive.ProductionDBCopy',
+      -language   => 'python3',
+      -rc_name    => 'default',
+      -parameters => {
+                       endpoint => $self->o('copy_service_uri'),
+                       payload  => $self->o('payload'),
+                       method   => 'post',
+                    },
+    },
+
+    {
+      -logic_name => 'dump_taxonomy_name_table_into_metadata_db',
+      -module     => 'Bio::EnsEMBL::Hive::RunnableDB::MySQLTransfer',
+      -parameters => {
+                       dest_db_conn => $self->o('metadata_db_uri'),
+                       table => 'ncbi_taxa_name',
+                       renamed_table => 'ncbi_taxa_name_new'
+                      },
+      -flow_into  => { 1 => 'create_taxonomy_table_in_metadata_db_if_not_exists' },
+    },
+    {
+      -logic_name => 'create_taxonomy_table_in_metadata_db_if_not_exists',
+      -module     => 'Bio::EnsEMBL::Hive::RunnableDB::DbCmd',
+      -parameters => {
+                        db_conn => $self->o('metadata_db_uri'),
+                        input_file =>  $self->o('base_dir') . '/ensembl-taxonomy/sql/table.sql'
+                      },
+      -flow_into  => { 1 => 'dump_taxonomy_node_table_into_metadata_db' },
+    },
+    {
+      -logic_name => 'dump_taxonomy_node_table_into_metadata_db',
+      -module     => 'Bio::EnsEMBL::Hive::RunnableDB::MySQLTransfer',
+      -parameters => {
+                       dest_db_conn => $self->o('metadata_db_uri'),
+                       table => 'ncbi_taxa_node',
+                       renamed_table => 'ncbi_taxa_node_new'
+                      },
+      -flow_into  => { 1 => 'rename_taxonomy_table_in_metadata_db' },
+    },
+
+    {
+      -logic_name => 'rename_taxonomy_table_in_metadata_db',
+      -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SqlCmd',
+      -parameters => {
+                        db_conn => $self->o('metadata_db_uri'),
+                        sql => [
+                                qw{
+                                 },
+
+                                 "RENAME TABLE ncbi_taxa_name TO ncbi_taxa_name_back",
+                                 "RENAME TABLE ncbi_taxa_name_new TO ncbi_taxa_name",
+                                 "RENAME TABLE ncbi_taxa_node TO ncbi_taxa_node_back",
+                                 "RENAME TABLE ncbi_taxa_node_new TO ncbi_taxa_node",
+                               ]
+                      },
+      -flow_into  => { 1 => 'drop_back_up_taxonomy_table_in_metadata_db' },
+    },
+    {
+      -logic_name => 'drop_back_up_taxonomy_table_in_metadata_db',
+      -module     => 'Bio::EnsEMBL::Hive::RunnableDB::SqlCmd',
+      -parameters => {
+                        db_conn => $self->o('metadata_db_uri'),
+                        sql => [
+                                 "DROP TABLE IF EXISTS ncbi_taxa_name_back",
+                                 "DROP TABLE IF EXISTS ncbi_taxa_node_back",
+                               ]
+                      },
+    },
+  ];
 }
 
 1;
