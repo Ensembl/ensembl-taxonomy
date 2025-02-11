@@ -33,7 +33,7 @@ use warnings;
 use base ('Bio::EnsEMBL::Hive::PipeConfig::EnsemblGeneric_conf');
 
 use Bio::EnsEMBL::Hive::PipeConfig::HiveGeneric_conf;
-use Bio::EnsEMBL::Hive::Version 2.5;
+use Bio::EnsEMBL::Hive::Version;
 
 use File::Spec::Functions qw(catdir);
 
