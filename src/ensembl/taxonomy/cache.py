@@ -247,10 +247,11 @@ def _recursive_leftright_indexing(
     counter: int = 1,
 ) -> int:
 
-    taxon_rank = rank_data["ranks_by_node"][taxon_id]
-    taxon_rank_is_hierarchical = taxon_rank not in _NH_RANKS
-    if taxon_rank_is_hierarchical:
-        rank_data["stack"].append(taxon_rank)
+    if rank_data:
+        taxon_rank = rank_data["ranks_by_node"][taxon_id]
+        taxon_rank_is_hierarchical = taxon_rank not in _NH_RANKS
+        if taxon_rank_is_hierarchical:
+            rank_data["stack"].append(taxon_rank)
 
     left_index = counter
     counter += 1
@@ -269,7 +270,7 @@ def _recursive_leftright_indexing(
     counter += 1
     left_right_recs.append((taxon_id, left_index, right_index))
 
-    if taxon_rank_is_hierarchical:
+    if rank_data and taxon_rank_is_hierarchical:
         taxon_rank = rank_data["stack"].pop()
         for anc_rank in rank_data["stack"]:
             if taxon_rank != anc_rank:
