@@ -35,9 +35,7 @@ import numpy as np
 import pandas as pd
 from numpy.typing import NDArray
 
-from ensembl.taxonomy.cache import _recursive_leftright_indexing
-from ensembl.taxonomy.utils import group_by_array
-
+from ensembl.taxonomy.utils import _recursive_leftright_indexing, group_by_array
 
 _NCBI_TAXA_TABLE_NAMES = ["ncbi_taxa_name", "ncbi_taxa_node"]
 
@@ -847,13 +845,11 @@ class TaxonDB:
         regexp_func_name = "regexp_full_match" if full_match else "regexp_matches"
         options = "c" if case_sensitive else "i"
 
-        query_parts = [
-            f"""
+        query_parts = [f"""
             SELECT taxon_id
             FROM ncbi_taxa_name
             WHERE {regexp_func_name}(name, '{pattern}', '{options}')
-        """
-        ]
+        """]
 
         params = {}
         if name_classes:

@@ -38,8 +38,12 @@ import pandas as pd
 import requests
 
 from ensembl.taxonomy.db import _NCBI_TAXA_TABLE_NAMES, TaxonDB
-from ensembl.taxonomy.utils import group_by_array, inclusive_range_between_values, NcbiTaxdumpDialect
-
+from ensembl.taxonomy.utils import (
+    _recursive_leftright_indexing,
+    group_by_array,
+    inclusive_range_between_values,
+    NcbiTaxdumpDialect,
+)
 
 _NCBI_TAXDUMP_METAINFO: dict = {
     "merged.dmp": {
@@ -91,8 +95,6 @@ _NCBI_TAXDUMP_METAINFO: dict = {
         },
     },
 }
-
-_NH_RANKS = {"clade", "no rank"}
 
 # Most of the rank hierarchy information presented here is as described in
 # Schoch et al. (2020) NCBI Taxonomy: a comprehensive update on curation, resources and tools.
@@ -237,46 +239,6 @@ def _find_unorderable_ranks(rank_pair_counts: dict[tuple[str, str], int]) -> set
         flagged_rank_pairs = obs_rank_pairs - exp_rank_pairs
 
     return unorderable_ranks
-
-
-def _recursive_leftright_indexing(
-    parent_child_map: dict[int, list[int]],
-    rank_data: dict,
-    left_right_recs: list[tuple[int, int, int]],
-    taxon_id: int,
-    counter: int = 1,
-) -> int:
-
-    if rank_data:
-        taxon_rank = rank_data["ranks_by_node"][taxon_id]
-        taxon_rank_is_hierarchical = taxon_rank not in _NH_RANKS
-        if taxon_rank_is_hierarchical:
-            rank_data["stack"].append(taxon_rank)
-
-    left_index = counter
-    counter += 1
-
-    if taxon_id in parent_child_map:
-        for child_id in parent_child_map[taxon_id]:
-            counter = _recursive_leftright_indexing(
-                parent_child_map,
-                rank_data,
-                left_right_recs,
-                child_id,
-                counter,
-            )
-
-    right_index = counter
-    counter += 1
-    left_right_recs.append((taxon_id, left_index, right_index))
-
-    if rank_data and taxon_rank_is_hierarchical:
-        taxon_rank = rank_data["stack"].pop()
-        for anc_rank in rank_data["stack"]:
-            if taxon_rank != anc_rank:
-                rank_data["pairs"][(taxon_rank, anc_rank)] += 1
-
-    return counter
 
 
 def _taxdump_id_from_last_modified(last_modified: str) -> str:

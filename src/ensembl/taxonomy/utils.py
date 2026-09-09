@@ -40,6 +40,47 @@ class NcbiTaxdumpDialect(csv.Dialect):
     strict = True
 
 
+def _recursive_leftright_indexing(
+    parent_child_map: dict[int, list[int]],
+    rank_data: dict,
+    left_right_recs: list[tuple[int, int, int]],
+    taxon_id: int,
+    counter: int = 1,
+) -> int:
+
+    if rank_data:
+        _NH_RANKS = {"clade", "no rank"}
+        taxon_rank = rank_data["ranks_by_node"][taxon_id]
+        taxon_rank_is_hierarchical = taxon_rank not in _NH_RANKS
+        if taxon_rank_is_hierarchical:
+            rank_data["stack"].append(taxon_rank)
+
+    left_index = counter
+    counter += 1
+
+    if taxon_id in parent_child_map:
+        for child_id in parent_child_map[taxon_id]:
+            counter = _recursive_leftright_indexing(
+                parent_child_map,
+                rank_data,
+                left_right_recs,
+                child_id,
+                counter,
+            )
+
+    right_index = counter
+    counter += 1
+    left_right_recs.append((taxon_id, left_index, right_index))
+
+    if rank_data and taxon_rank_is_hierarchical:
+        taxon_rank = rank_data["stack"].pop()
+        for anc_rank in rank_data["stack"]:
+            if taxon_rank != anc_rank:
+                rank_data["pairs"][(taxon_rank, anc_rank)] += 1
+
+    return counter
+
+
 def group_by_array(data_arr: NDArray, group_arr: NDArray, sort_values: bool = False) -> dict:
     """Group the data array by the values in the given group array.
 
