@@ -440,7 +440,7 @@ class TaxonDB:
                 If set to 'split', descendant taxa are preferentially kept.
             taxon_name_map: Mapping of taxonomy ID to label(s).
                 Replacement of a taxon with multiple labels is
-                supported, but only for subtree leaf taxa.
+                supported.
 
         Returns:
             A Newick string representing the specified subtree.
@@ -450,6 +450,7 @@ class TaxonDB:
             raise RuntimeError("TaxonDB.export_subtree() takes a subtree_root_id or leaf_ids, but not both")
 
         if subtree_root_id:
+            int_leaf_ids = []
             int_subtree_root_id = self._preprocess_taxon_id(subtree_root_id)
             tree_taxon_ids = [int_subtree_root_id] + self.descendant_ids(int_subtree_root_id)
         elif leaf_ids:
@@ -467,41 +468,78 @@ class TaxonDB:
         left_index_arr = res_arrays["left_index"]
         right_index_arr = res_arrays["right_index"]
 
-        if simplify:
+        if simplify or taxon_name_map:
+
             parent_child_map = group_by_array(taxon_id_arr, parent_id_arr, sort_values=True)
             child_parent_map = dict(zip(res_arrays["taxon_id"].tolist(), res_arrays["parent_id"].tolist()))
 
-            for taxon_id in taxon_id_arr:
-                print(taxon_id)
-                if taxon_id not in parent_child_map:
-                    continue
-                child_ids = parent_child_map[taxon_id]
-                if len(child_ids) == 1:
-                    child_id = child_ids[0]
-                    dropped_taxon_id = None
-                    new_parent_id = None
-                    if simplify == "lump":
-                        if child_id in parent_child_map:
-                            new_child_ids = parent_child_map[child_id]
-                            dropped_taxon_id = child_id
-                            new_parent_id = taxon_id
-                    elif simplify == "split":
-                        if taxon_id in child_parent_map:
-                            parent_id = child_parent_map[taxon_id]
-                            new_child_ids = parent_child_map[parent_id]
-                            new_child_ids.remove(taxon_id)
-                            new_child_ids.append(child_id)
-                            dropped_taxon_id = taxon_id
-                            new_parent_id = parent_id
-                    else:
-                        raise ValueError(f"unknown subtree simplify mode: '{simplify}'")
-                    if dropped_taxon_id:
-                        parent_child_map[new_parent_id] = new_child_ids
-                        for new_child_id in new_child_ids:
-                            child_parent_map[new_child_id] = new_parent_id
-                        del parent_child_map[dropped_taxon_id]
-                        del child_parent_map[dropped_taxon_id]
+            if simplify:
+                for taxon_id in taxon_id_arr:
+                    if taxon_id not in parent_child_map:
+                        continue
+                    child_ids = parent_child_map[taxon_id]
+                    if len(child_ids) == 1:
+                        child_id = child_ids[0]
+                        dropped_taxon_id = None
+                        new_parent_id = None
+                        if simplify == "lump":
+                            if child_id in parent_child_map and child_id not in int_leaf_ids:
+                                new_child_ids = parent_child_map[child_id]
+                                dropped_taxon_id = child_id
+                                new_parent_id = taxon_id
+                        elif simplify == "split":
+                            if taxon_id in child_parent_map and taxon_id not in int_leaf_ids:
+                                parent_id = child_parent_map[taxon_id]
+                                new_child_ids = parent_child_map[parent_id]
+                                new_child_ids.remove(taxon_id)
+                                new_child_ids.append(child_id)
+                                dropped_taxon_id = taxon_id
+                                new_parent_id = parent_id
+                        else:
+                            raise ValueError(f"unknown subtree simplify mode: '{simplify}'")
+                        if dropped_taxon_id:
+                            parent_child_map[new_parent_id] = new_child_ids
+                            for new_child_id in new_child_ids:
+                                child_parent_map[new_child_id] = new_parent_id
+                            del parent_child_map[dropped_taxon_id]
+                            del child_parent_map[dropped_taxon_id]
 
+            if taxon_name_map:
+                for taxon_id in sorted(taxon_name_map):
+                    taxon_names = sorted(str(x) for x in taxon_name_map[taxon_id])
+
+                    for taxon_name in taxon_names:
+                        if taxon_name.isascii() and taxon_name.isdecimal():
+                            raise ValueError(f"cannot rename taxon_id {taxon_id} to decimal integer {taxon_name}")
+
+                    if taxon_id in parent_child_map:
+                        new_parent_id = taxon_id
+                        new_child_ids = parent_child_map[new_parent_id]
+                    elif taxon_id in child_parent_map:
+                        if len(taxon_names) == 1:
+                            new_parent_id = child_parent_map.pop(taxon_id)
+                            new_child_ids = parent_child_map[new_parent_id]
+                            new_child_ids.remove(taxon_id)
+                        else:
+                            new_parent_id = taxon_id
+                            try:
+                                new_child_ids = parent_child_map[new_parent_id]
+                            except KeyError:
+                                new_child_ids = []
+                    else:
+                        raise ValueError(f"taxon {taxon_id} not found in (possibly simplified) subtree")
+
+                    new_child_ids.extend(taxon_names)
+                    parent_child_map[new_parent_id] = new_child_ids
+                    for new_child_id in new_child_ids:
+                        child_parent_map[new_child_id] = new_parent_id
+
+                # After applying the taxon name mapping, taxon_id_arr will contain string values, so we
+                # convert child_parent_map keys to strings to ease creation of the parent_id_arr array.
+                child_parent_map = {str(k): x for k, x in child_parent_map.items()}
+
+            # Whether simplifying the subtree or mapping taxon_ids, we
+            # need to rebuild the left-right indices before we continue.
             left_right_recs = []
             unused_rank_data = {}
             subtree_root_id = self.last_common_taxon_id(tree_taxon_ids)
@@ -509,7 +547,7 @@ class TaxonDB:
                 parent_child_map, unused_rank_data, left_right_recs, subtree_root_id
             )
             taxon_id_arr, left_index_arr, right_index_arr = (
-                np.array(x, dtype=np.int32) for x in zip(*left_right_recs)
+                np.array(x) for x in zip(*left_right_recs)
             )
             parent_id_arr = np.array([child_parent_map[k] for k in taxon_id_arr])
 
@@ -519,17 +557,19 @@ class TaxonDB:
         lr_taxon_arr = np.tile(taxon_id_arr, 2)[sort_idxs]
         lr_parent_arr = np.tile(parent_id_arr, 2)[sort_idxs]
 
-        tree_leaf_ids = lr_taxon_arr[np.diff(lr_taxon_arr, prepend=0) == 0]
+        # Only subtree leaf taxa can be found in consecutive elements of the lr_taxon_arr array.
+        same_taxon_mask = np.concatenate(([False], (lr_taxon_arr[:-1] == lr_taxon_arr[1:])))
+        tree_leaf_ids = lr_taxon_arr[same_taxon_mask]
         lr_leaf_mask = np.isin(lr_taxon_arr, tree_leaf_ids)
 
         right_index_mask = np.full_like(taxon_id_arr, True, dtype=np.bool_)
         lr_right_mask = np.concatenate((~right_index_mask, right_index_mask))[sort_idxs]
 
-        max_name_length = len(str(lr_taxon_arr.max()))
+        max_name_length = max(len(str(x)) for x in lr_taxon_arr)
         max_nwk_part_length = max_name_length + 1  # add 1 for closing paren: ')'
         nwk_arr = np.full_like(lr_taxon_arr, "", dtype=f"<U{max_nwk_part_length}")
 
-        diff_taxon_mask = np.diff(lr_taxon_arr, prepend=lr_taxon_arr[0]) != 0
+        diff_taxon_mask = np.concatenate(([False], (lr_taxon_arr[:-1] != lr_taxon_arr[1:])))
         same_parent_mask = np.diff(lr_parent_arr, prepend=-1) == 0
         comma_mask = same_parent_mask & diff_taxon_mask
         nwk_arr[comma_mask] = ","
@@ -543,27 +583,7 @@ class TaxonDB:
             nwk_arr[lr_right_mask], lr_taxon_arr[lr_right_mask].astype(nwk_arr.dtype)
         )
 
-        nwk_str = "".join(nwk_arr) + ";"
-
-        if taxon_name_map:
-            for taxon_id in taxon_name_map:
-                taxon_names = list(taxon_name_map[taxon_id])
-                if taxon_id not in taxon_id_arr:
-                    warn(f"taxon_name_map entry {taxon_id} is not in subtree; ignoring")
-                if len(taxon_names) == 1:
-                    replacement_string = taxon_names[0]
-                elif len(taxon_names) > 1:
-                    if taxon_id in parent_id_arr:
-                        raise ValueError(
-                            f"taxon_id {taxon_id} has multiple replacement values,"
-                            f" but this is unsupported for internal taxa"
-                        )
-                    replacement_string = f"({','.join(sorted(set(taxon_names)))})"
-                else:
-                    raise ValueError(f"taxon_name_map entry {taxon_id} has no replacement value")
-                nwk_str = re.sub(rf"\b{taxon_id}\b", replacement_string, nwk_str)
-
-        return nwk_str
+        return "".join(nwk_arr) + ";"
 
     def genbank_common_name(self, taxon_id: int | str) -> str | None:
         """Return GenBank common name of the given taxon.
