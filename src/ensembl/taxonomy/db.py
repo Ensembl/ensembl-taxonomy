@@ -21,7 +21,7 @@ __all__ = [
 
 from collections.abc import Iterable
 from contextlib import contextmanager, ExitStack
-from itertools import islice
+import itertools
 from numbers import Integral
 import operator
 import os
@@ -742,9 +742,7 @@ class TaxonDB:
                 int_taxon_ids = self.taxon_ids()
 
             taxon_id_batch_size = 512
-            taxon_id_iterator = iter(int_taxon_ids)
-            # From Python 3.12 onwards, we can use 'itertools.batched' here.
-            while batch_taxon_ids := tuple(islice(taxon_id_iterator, taxon_id_batch_size)):
+            for batch_taxon_ids in itertools.batched(int_taxon_ids, taxon_id_batch_size):
                 params = {"t1": batch_taxon_ids}
                 conditional_clause = "WHERE (n1.taxon_id IN $t1)"
                 query = " ".join([base_query, conditional_clause] + final_clauses)
