@@ -460,10 +460,18 @@ class TaxonCache:
 
         return archive_meta_df
 
-    def _write_dataframe_to_parquet(self, _dataframe: pd.DataFrame, parquet_file_path: Path) -> None:
+    def _write_dataframe_to_parquet(
+        self, _dataframe: pd.DataFrame, parquet_file_path: Path, compression_level: int = 3
+    ) -> None:
+        if not 1 <= compression_level <= 22:
+            raise ValueError(
+                f"configured Zstandard compression_level ({compression_level}) is out of range (min=1, max=22)"
+            )
         with duckdb.connect(config={"threads": self._threads}) as conn:
             conn.execute("CREATE TABLE t AS SELECT * FROM _dataframe")
-            conn.execute(f"COPY t TO '{parquet_file_path}' (FORMAT PARQUET, COMPRESSION 'zstd')")
+            conn.execute(
+                f"COPY t TO '{parquet_file_path}' (FORMAT PARQUET, COMPRESSION 'zstd', COMPRESSION_LEVEL {compression_level})"
+            )
 
     def available_archive_ids(self) -> list[str]:
         """Return list of available NCBI Taxonomy archives."""
