@@ -47,8 +47,6 @@ from ensembl.taxonomy.utils import (
 
 _NCBI_TAXDUMP_METAINFO: dict = {
     "merged.dmp": {
-        "canonic_columns": ["old_taxon_id", "new_taxon_id"],
-        "canonic_sort_keys": ["old_taxon_id", "new_taxon_id"],
         "dtypes": {
             "old_taxon_id": np.int32,
             "new_taxon_id": np.int32,
@@ -61,8 +59,6 @@ _NCBI_TAXDUMP_METAINFO: dict = {
         },
     },
     "names.dmp": {
-        "canonic_columns": ["taxon_id", "name", "name_class"],
-        "canonic_sort_keys": ["taxon_id", "name_class", "name"],
         "dtypes": {
             "taxon_id": np.int32,
             "name": np.str_,
@@ -77,8 +73,6 @@ _NCBI_TAXDUMP_METAINFO: dict = {
         },
     },
     "nodes.dmp": {
-        "canonic_columns": ["taxon_id", "parent_id", "rank", "genbank_hidden_flag"],
-        "canonic_sort_keys": ["taxon_id"],
         "dtypes": {
             "taxon_id": np.int32,
             "parent_id": np.int32,
