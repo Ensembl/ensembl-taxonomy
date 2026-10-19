@@ -46,6 +46,16 @@ from ensembl.taxonomy.utils import (
 )
 
 _NCBI_TAXDUMP_METAINFO: dict = {
+    "delnodes.dmp": {
+        "dtypes": {
+            "taxon_id": np.int32,
+        },
+        # We treat dump file delimiter as "\t", so if we read any additional columns of 'delnodes.dmp',
+        # we would need to double column indices w.r.t the original pipe-delimited columns.
+        "dump_col_map": {
+            0: "taxon_id",
+        },
+    },
     "merged.dmp": {
         "dtypes": {
             "old_taxon_id": np.int32,
@@ -298,9 +308,11 @@ class TaxonCache:
     ) -> pd.DataFrame:
 
         if table_name == "ncbi_taxa_name":
-            dump_file_names = ["names.dmp", "merged.dmp"]
+            dump_file_names = ["names.dmp"]
         elif table_name == "ncbi_taxa_node":
             dump_file_names = ["nodes.dmp"]
+        elif table_name == "ncbi_taxa_past":
+            dump_file_names = ["delnodes.dmp", "merged.dmp"]
         else:
             raise ValueError(f"unknown NCBI Taxonomy table name: '{table_name}'")
 
@@ -351,17 +363,27 @@ class TaxonCache:
                 provenance_df = pd.DataFrame(provenance_recs, columns=col_names)
 
                 df = pd.concat([provenance_df, df])
+                df.sort_values(["taxon_id", "name_class"], inplace=True)
+                df.reset_index(drop=True, inplace=True)
+
+            elif dump_file_name == "delnodes.dmp":
+                df = dump_file_df
+
+                df.insert(1, "status", "deleted", allow_duplicates=False)
+                df.insert(2, "primary_id", pd.NA, allow_duplicates=False)
 
             elif dump_file_name == "merged.dmp":
 
                 df_part = pd.concat(
-                    [dump_file_df["new_taxon_id"], dump_file_df["old_taxon_id"]],
+                    [dump_file_df["old_taxon_id"], dump_file_df["new_taxon_id"]],
                     axis="columns",
-                    keys=["taxon_id", "name"],
+                    keys=["taxon_id", "primary_id"],
                 )
-                df_part["name_class"] = "merged_taxon_id"
+
+                df_part.insert(1, "status", "merged", allow_duplicates=False)
+
                 df = pd.concat([df, df_part], axis="index")
-                df.sort_values(["taxon_id", "name_class"], inplace=True)
+                df.sort_values(["taxon_id"], inplace=True)
                 df.reset_index(drop=True, inplace=True)
 
             elif dump_file_name == "nodes.dmp":

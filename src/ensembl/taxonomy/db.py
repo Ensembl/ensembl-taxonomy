@@ -14,6 +14,9 @@
 """Module for working with an NCBI Taxonomy database."""
 
 __all__ = [
+    "DeletedTaxaError",
+    "InvalidTaxaError",
+    "MergedTaxaError",
     "TaxonDB",
     "TaxonCacheError",
     "UnknownTaxaError",
@@ -37,7 +40,8 @@ from numpy.typing import NDArray
 
 from ensembl.taxonomy.utils import _recursive_leftright_indexing, group_by_array
 
-_NCBI_TAXA_TABLE_NAMES = ["ncbi_taxa_name", "ncbi_taxa_node"]
+_NCBI_TAXA_TABLE_NAMES = ["ncbi_taxa_name", "ncbi_taxa_node", "ncbi_taxa_past"]
+
 
 _NCBI_TAXON_ID_RE = re.compile(r"(?:ncbitaxon:)?(?P<taxon_id>[0-9]+)")
 
@@ -46,8 +50,20 @@ class TaxonCacheError(Exception):
     """Taxonomy cache exception class."""
 
 
-class UnknownTaxaError(Exception):
-    """Exception class for taxonomy IDs that are not in the given taxonomy database."""
+class InvalidTaxaError(Exception):
+    """Exception class for taxonomy IDs that are not current in the taxonomy database."""
+
+
+class DeletedTaxaError(InvalidTaxaError):
+    """Exception class for taxonomy IDs that have been deleted from the taxonomy database."""
+
+
+class MergedTaxaError(InvalidTaxaError):
+    """Exception class for taxa that have been merged into another taxon in the taxonomy database."""
+
+
+class UnknownTaxaError(InvalidTaxaError):
+    """Exception class for taxonomy IDs that are not among current or past taxa of the taxonomy database."""
 
 
 def _execute_multi_value_query(
@@ -288,14 +304,48 @@ class TaxonDB:
         res_arrays = _execute_multi_value_query(self._conn, query, taxon_id_sets)
         left_index_arr = res_arrays["left_index"]
         if len(left_index_arr) != len(taxon_ids):
-            unknown_taxon_ids = [x for x in taxon_ids if x not in self]
-            unknown_taxon_id_str = ", ".join(map(str, unknown_taxon_ids))
-            raise UnknownTaxaError(
-                f"{len(unknown_taxon_ids)} taxon_ids not found in"
-                f" taxdump '{self._taxdump_id}': {unknown_taxon_id_str}"
-            )
+            invalid_taxon_ids = [x for x in taxon_ids if x not in self]
+            self._handle_invalid_taxon_ids(invalid_taxon_ids)
 
         return left_index_arr.min().item(), res_arrays["right_index"].max().item()
+
+    def _handle_invalid_taxon_ids(
+        self, invalid_taxon_ids: Iterable[int], original_exc: Optional[Exception] = None
+    ):
+
+        taxon_ids = sorted(set(invalid_taxon_ids))
+
+        if len(taxon_ids) == 1:
+            taxon_group_desc = f"ncbitaxon:{taxon_ids[0]}"
+        else:
+            example_taxon_id_str = ", ".join(map(str, taxon_ids[:3]))
+            taxon_group_desc = f"{len(taxon_ids)} taxa (e.g. {example_taxon_id_str})"
+
+        taxon_statuses = set()
+        for taxon_id in taxon_ids:
+            try:
+                taxon_status = self._query_taxon_lifecycle_attribute("status", taxon_id)
+            except UnknownTaxaError:
+                taxon_status = "unknown"
+            taxon_statuses.add(taxon_status)
+
+        if len(taxon_statuses) == 1:
+            taxon_status = list(taxon_statuses)[0]
+            if taxon_status in "deleted":
+                _TaxonGroupError = DeletedTaxaError
+                taxon_group_status = "deleted"
+            elif taxon_status == "merged":
+                _TaxonGroupError = MergedTaxaError
+                taxon_group_status = "merged"
+            else:
+                raise ValueError(f"unknown taxon lifecycle status: {taxon_status}")
+        else:
+            _TaxonGroupError = InvalidTaxaError
+            taxon_group_status = "invalid"
+
+        raise _TaxonGroupError(
+            f"{taxon_group_desc} classified as {taxon_group_status} in taxonomy database '{self.taxdump_id}'"
+        ) from original_exc
 
     def _query_taxon_attribute(
         self,
@@ -320,9 +370,7 @@ class TaxonDB:
             df = dataframes[0]
         except IndexError as exc:
             if int_taxon_id not in self:
-                raise UnknownTaxaError(
-                    f"ncbitaxon:{int_taxon_id} not found in taxonomy database '{self.taxdump_id}'"
-                ) from exc
+                self._handle_invalid_taxon_ids([int_taxon_id], original_exc=exc)
             if required:
                 raise RuntimeError(
                     f"{taxon_attr_name} of ncbitaxon:{int_taxon_id}"
@@ -335,6 +383,37 @@ class TaxonDB:
             taxon_attr_value = convert(res_arr[0])
 
         return taxon_attr_value
+
+    def _query_taxon_lifecycle_attribute(
+        self, taxon_attr_name: str, query_taxon_id: int | str
+    ) -> int | str | None:
+        int_taxon_id = self._preprocess_taxon_id(query_taxon_id)
+
+        query = """\
+            SELECT
+                {'status': status, 'primary_id': primary_id}
+            FROM
+                ncbi_taxa_past
+            WHERE
+                taxon_id = $taxon_id
+        """
+
+        row = _execute_single_taxon_query(self._conn, query, "fetchone", int_taxon_id)
+
+        try:
+            taxon_attr_map = row[0]
+        except TypeError as exc:
+            if query_taxon_id in self:
+                taxon_attr_map = {
+                    "status": "current",
+                    "primary_id": int_taxon_id,
+                }
+            else:
+                raise UnknownTaxaError(
+                    f"ncbitaxon:{int_taxon_id} classified as unknown in taxonomy database '{self.taxdump_id}'"
+                ) from exc
+
+        return taxon_attr_map[taxon_attr_name]
 
     def _validate_name_classes(self, name_classes: Iterable[str], label: str = "name class") -> None:
         unk_name_classes = set(name_classes) - set(self._name_classes)
@@ -510,7 +589,9 @@ class TaxonDB:
 
                     for taxon_name in taxon_names:
                         if taxon_name.isascii() and taxon_name.isdecimal():
-                            raise ValueError(f"cannot rename taxon_id {taxon_id} to decimal integer {taxon_name}")
+                            raise ValueError(
+                                f"cannot rename taxon_id {taxon_id} to decimal integer {taxon_name}"
+                            )
 
                     if taxon_id in parent_child_map:
                         new_parent_id = taxon_id
@@ -603,6 +684,14 @@ class TaxonDB:
         """Return import date/time of this NCBI Taxonomy database."""
         return self._import_date
 
+    def is_deleted_id(self, taxon_id: int | str) -> bool:
+        status = self._query_taxon_lifecycle_attribute("status", taxon_id)
+        return status == "deleted"
+
+    def is_merged_id(self, taxon_id: int | str) -> bool:
+        status = self._query_taxon_lifecycle_attribute("status", taxon_id)
+        return status == "merged"
+
     def last_common_taxon_id(self, taxon_ids: Iterable[int | str]) -> int:
         """Return Taxonomy ID of the last common taxon of the given taxa."""
         return self.common_lineage_ids(taxon_ids)[-1]
@@ -645,6 +734,9 @@ class TaxonDB:
             "query_taxa_attributes", "parent_id", taxon_id, "item", required=True
         )
         return parent_id or None
+
+    def primary_id(self, taxon_id: int | str) -> int | None:
+        return self._query_taxon_lifecycle_attribute("primary_id", taxon_id)
 
     def query_taxa_attribute(
         self, attr_name: str, taxon_ids: Optional[Iterable[int | str]] = None
@@ -949,9 +1041,7 @@ class TaxonDB:
         taxon_names_by_class = group_by_array(res_arrays["name"], res_arrays["name_class"])
 
         if "scientific name" not in taxon_names_by_class:
-            raise UnknownTaxaError(
-                f"ncbitaxon:{int_taxon_id} not found" f" in taxonomy database '{self.taxdump_id}'"
-            )
+            self._handle_invalid_taxon_ids([int_taxon_id])
 
         if sci_name_is_sentinel:
             taxon_names_by_class.pop("scientific name")
