@@ -238,20 +238,7 @@ def _find_unorderable_ranks(rank_pair_counts: dict[tuple[str, str], int]) -> set
 def _taxdump_id_from_last_modified(last_modified: str) -> str:
     # We assume the last-modified header has
     # English-language month abbreviations.
-    month_abbr_to_num = {
-        "Jan": "01",
-        "Feb": "02",
-        "Mar": "03",
-        "Apr": "04",
-        "May": "05",
-        "Jun": "06",
-        "Jul": "07",
-        "Aug": "08",
-        "Sep": "09",
-        "Oct": "10",
-        "Nov": "11",
-        "Dec": "12",
-    }
+    month_abbr = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
     timestamp_re = re.compile(
         r"[^,]+, (?P<day>[0-9]{2}) (?P<month_abbr>\S+) (?P<year>[0-9]{4,})"
@@ -259,7 +246,12 @@ def _taxdump_id_from_last_modified(last_modified: str) -> str:
     )
 
     if m := timestamp_re.fullmatch(last_modified):
-        month = month_abbr_to_num[m["month_abbr"]]
+        try:
+            # We are expecting an English-language month abbreviation, but we need
+            # to map this to a zero-padded two-digit number (e.g. "Jan" to "01").
+            month = str(month_abbr.index(m["month_abbr"]) + 1).rjust(2, "0")
+        except IndexError as exc:
+            raise ValueError(f"unknown month abbreviation: {m['month_abbr']}") from exc
         taxdump_id = f"{m['year']}-{month}-{m['day']}T{m['hour']}:{m['min']}:{m['sec']}Z"
     else:
         raise ValueError(f"failed to generate taxdump ID from 'Last-Modified' header: '{last_modified}'")
