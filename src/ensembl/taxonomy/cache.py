@@ -592,8 +592,24 @@ class TaxonCache:
 
         return taxdump_id
 
+    def cached_archive_ids(self) -> list[str]:
+        """List cached NCBI Taxonomy archive IDs.
+
+        Returns:
+            A list containing the archive IDs of cached taxdump archives.
+        """
+        cached_taxdump_ids = self.cached_taxdump_ids()
+        archive_meta_df = self._get_archive_metadata()
+        taxdump_to_archive_id = dict(zip(archive_meta_df["taxdump_id"], archive_meta_df["archive_id"]))
+        cached_archive_ids = [
+            taxdump_to_archive_id[taxdump_id]
+            for taxdump_id in cached_taxdump_ids
+            if taxdump_id in taxdump_to_archive_id
+        ]
+        return cached_archive_ids
+
     def cached_taxdump_ids(self) -> list[str]:
-        """List cached NCBI Taxonomy taxdumps.
+        """List cached NCBI Taxonomy taxdump IDs.
 
         Returns:
             A list containing the taxdump IDs of cached taxdumps.
