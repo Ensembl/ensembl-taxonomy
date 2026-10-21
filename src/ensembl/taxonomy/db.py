@@ -685,10 +685,26 @@ class TaxonDB:
         return self._import_date
 
     def is_deleted_id(self, taxon_id: int | str) -> bool:
+        """Check if the given Taxonomy ID has been deleted.
+
+        Args:
+            taxon_id: Taxonomy ID to check.
+
+        Returns:
+            True if Taxonomy ID has been deleted; False otherwise.
+        """
         status = self._query_taxon_lifecycle_attribute("status", taxon_id)
         return status == "deleted"
 
     def is_merged_id(self, taxon_id: int | str) -> bool:
+        """Check if the given Taxonomy ID has been merged into another.
+
+        Args:
+            taxon_id: Taxonomy ID to check.
+
+        Returns:
+            True if Taxonomy ID has been merged into another; False otherwise.
+        """
         status = self._query_taxon_lifecycle_attribute("status", taxon_id)
         return status == "merged"
 
@@ -736,6 +752,17 @@ class TaxonDB:
         return parent_id or None
 
     def primary_id(self, taxon_id: int | str) -> int | None:
+        """Return primary Taxonomy ID of the given Taxonomy ID.
+
+        Args:
+            taxon_id: Get the primary Taxonomy ID of the taxon with this Taxonomy ID.
+
+        Returns:
+            The primary Taxonomy ID of the given Taxonomy ID, if available.
+            For a merged Taxonomy ID, the primary Taxonomy ID is the one
+            into which it has been merged. A current Taxonomy ID is its own
+            primary Taxonomy ID. Returns None for a deleted Taxonomy ID.
+        """
         return self._query_taxon_lifecycle_attribute("primary_id", taxon_id)
 
     def query_taxa_attribute(
