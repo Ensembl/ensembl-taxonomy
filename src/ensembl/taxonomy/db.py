@@ -755,7 +755,7 @@ class TaxonDB:
         """Return primary Taxonomy ID of the given Taxonomy ID.
 
         Args:
-            taxon_id: Get the primary Taxonomy ID of the taxon with this Taxonomy ID.
+            taxon_id: For the given Taxonomy ID, return its primary Taxonomy ID.
 
         Returns:
             The primary Taxonomy ID of the given Taxonomy ID, if available.
