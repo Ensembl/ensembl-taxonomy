@@ -604,15 +604,31 @@ class TaxonCache:
             cached_taxdump_ids.append(taxdump_id)
         return sorted(cached_taxdump_ids)
 
-    def taxon_db(self, taxdump_id: str, threads: int = 1) -> TaxonDB:
-        """Access the NCBI Taxonomy database specified by the given taxdump ID.
+    def taxon_db(
+        self, *, archive_id: Optional[str] = None, taxdump_id: Optional[str] = None, threads: int = 1
+    ) -> TaxonDB:
+        """Access the NCBI Taxonomy database specified by the given taxdump or archive ID.
 
         Args:
-            taxdump_id: Taxdump ID of taxonomy database to access.
-            threads: Number of threads to use.
+            archive_id: Archive ID of taxonomy database to access. Mutually exclusive with taxdump_id.
+            taxdump_id: Taxdump ID of taxonomy database to access. Mutually exclusive with archive_id.
+            threads: Number of threads to use (default: 1).
 
         Returns:
             TaxonDB providing access to the specified taxonomy database.
         """
+        if archive_id:
+            if taxdump_id:
+                raise RuntimeError(
+                    f"{type(self).__name__}.taxon_db() expects an archive_id or taxdump_id, but not both"
+                )
+            archive_meta_df = self._get_archive_metadata()
+            try:
+                taxdump_id = archive_meta_df.loc[archive_id, "taxdump_id"]
+            except KeyError as exc:
+                raise ValueError(f"unknown archive_id: '{archive_id}") from exc
+        elif not taxdump_id:
+            raise RuntimeError(f"{type(self).__name__}.taxon_db() expects an archive_id or taxdump_id")
+
         taxdump_dir_path = self._get_taxdump_dir_path(taxdump_id)
         return TaxonDB(taxdump_dir_path, threads=threads)
