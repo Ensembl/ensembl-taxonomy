@@ -380,7 +380,15 @@ class TaxonDB:
         else:
             convert = operator.methodcaller(convert_method_name)
             res_arr = df[taxon_attr_name].to_numpy()
-            taxon_attr_value = convert(res_arr[0])
+
+            try:
+                taxon_attr_value = convert(res_arr[0])
+            except AttributeError as exc:
+                # This is a stopgap fix for an issue with taxon rank dtype.
+                if taxon_attr_name == "rank" and isinstance(res_arr[0], str):
+                    taxon_attr_value = res_arr[0]
+                else:
+                    raise
 
         return taxon_attr_value
 
